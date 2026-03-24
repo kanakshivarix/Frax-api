@@ -9,7 +9,9 @@ class CafeOutletRepository {
     return CafeOutlet.aggregate([
       {
         $match: {
-          status: { $in: ["LIVE", "FULLY_FUNDED", "SPV_IN_PROCESS", "OPERATIONAL"] },
+          status: {
+            $in: ["LIVE", "FULLY_FUNDED", "SPV_IN_PROCESS", "OPERATIONAL"],
+          },
           ...filters,
         },
       },
@@ -35,7 +37,15 @@ class CafeOutletRepository {
             $cond: [
               { $gt: ["$totalShares", 0] },
               {
-                $round: [{ $multiply: [{ $divide: ["$soldShares", "$totalShares"] }, 100] }, 0],
+                $round: [
+                  {
+                    $multiply: [
+                      { $divide: ["$soldShares", "$totalShares"] },
+                      100,
+                    ],
+                  },
+                  0,
+                ],
               },
               0,
             ],
@@ -59,15 +69,27 @@ class CafeOutletRepository {
   }
 
   static pushImage(id, image) {
-    return CafeOutlet.findByIdAndUpdate(id, { $push: { images: image } }, { new: true });
+    return CafeOutlet.findByIdAndUpdate(
+      id,
+      { $push: { images: image } },
+      { new: true },
+    );
   }
 
   static pushMenuImage(id, image) {
-    return CafeOutlet.findByIdAndUpdate(id, { $push: { menuImages: image } }, { new: true });
+    return CafeOutlet.findByIdAndUpdate(
+      id,
+      { $push: { menuImages: image } },
+      { new: true },
+    );
   }
 
   static setCoverImage(id, image) {
-    return CafeOutlet.findByIdAndUpdate(id, { coverImage: image }, { new: true });
+    return CafeOutlet.findByIdAndUpdate(
+      id,
+      { coverImage: image },
+      { new: true },
+    );
   }
 
   static setBrochure(id, doc) {
@@ -93,6 +115,29 @@ class CafeOutletRepository {
           pricePerShare: 1,
           totalShares: 1,
           soldShares: 1,
+          minInvestmentShares: 1,
+          maxInvestmentSharesPerUser: 1,
+          expectedMonthlyProfit: 1,
+          projectedROI: 1,
+          carpetAreaSqFt: 1,
+          seatingCapacity: 1,
+          parkingAvailability: 1,
+
+          shortDescription: 1,
+          description: 1,
+          highlights: 1,
+          estimatedLaunchDate: 1,
+          actualLaunchDate: 1,
+
+          // ✅ LIMIT IMAGES TO 5
+          images: { $slice: ["$images", 5] },
+
+          // ✅ LIMIT MENU IMAGES TO 5
+          menuImages: { $slice: ["$menuImages", 5] },
+
+          coverImage: 1,
+          brochure: 1,
+
           status: 1,
           coverImage: 1,
           createdAt: 1,
@@ -117,7 +162,7 @@ class CafeOutletRepository {
         $project: {
           id: "$_id",
           _id: 0,
-
+          
           outletName: 1,
           outletCode: 1,
           city: 1,
@@ -127,6 +172,28 @@ class CafeOutletRepository {
           pricePerShare: 1,
           totalShares: 1,
           soldShares: 1,
+          minInvestmentShares: 1,
+          maxInvestmentSharesPerUser: 1,
+          expectedMonthlyProfit: 1,
+          projectedROI: 1,
+          carpetAreaSqFt: 1,
+          seatingCapacity: 1,
+          parkingAvailability: 1,
+
+          shortDescription: 1,
+          description: 1,
+          highlights: 1,
+          estimatedLaunchDate: 1,
+          actualLaunchDate: 1,
+
+          // ✅ LIMIT IMAGES TO 5
+          images: { $slice: ["$images", 5] },
+
+          // ✅ LIMIT MENU IMAGES TO 5
+          menuImages: { $slice: ["$menuImages", 5] },
+
+          coverImage: 1,
+          brochure: 1,
           status: 1,
           coverImage: 1,
           createdAt: 1,
@@ -182,6 +249,10 @@ class CafeOutletRepository {
       { session },
     );
   }
+  static async updateById(cafeId, updateObj) {
+    return CafeOutlet.findByIdAndUpdate(cafeId, updateObj, { new: true });
+  }
+  
 }
 
 module.exports = CafeOutletRepository;

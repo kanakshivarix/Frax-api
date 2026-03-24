@@ -22,5 +22,19 @@ router.post(
   validate(validation.cafeOutlet),
   AdminCafeOutletController.create,
 );
+router.patch(
+  "/:cafeId/status",
+  authMiddleware,
+  allowed(User_Type.SUPER_ADMIN),
+  validate(validation.updateStatus, REQUEST_TARGET.BODY), // validate body { status }
+  AdminCafeOutletController.changeStatus
+);
+router.patch(
+  "/:cafeId",
+  authMiddleware,
+  allowed(User_Type.SUPER_ADMIN),
+  validate(validation.updateCafeOutlet, REQUEST_TARGET.BODY),
+  AdminCafeOutletController.update
+);
 
 module.exports = router;

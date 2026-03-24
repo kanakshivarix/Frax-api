@@ -5,7 +5,8 @@ const baseTransform = require("./plugins/transform.plugin");
 
 const UserSchema = new Schema(
   {
-    fullname: { type: String },
+    firstName: { type: String },
+    lastName:{type:String},
     email: { type: String, unique: true, sparse: true },
     phone: { type: String, unique: true },
     isDisabled: { type: Boolean, default: false },

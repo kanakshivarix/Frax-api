@@ -111,4 +111,21 @@ module.exports = {
     areaType: z.enum(AREA_TYPES).optional(),
     status: z.enum(CAFE_STATUSES).optional(),
   }),
+   updateStatus: z.object({
+    status: z.enum(CAFE_STATUSES, {
+      required_error: "status is required",
+      invalid_type_error: "Invalid status value",
+    }),
+  }),
+  updateCafeOutlet: z.object({
+  pincode: z.string().optional(),
+  fullAddress: z.string().optional(),
+
+  projectedROI: z.number().optional(),
+  carpetAreaSqFt: z.number().optional(),
+  seatingCapacity: z.number().optional(),
+
+  description: z.string().optional(),
+  highlights: z.array(z.string()).optional(),
+}).strict()
 };

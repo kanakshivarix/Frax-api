@@ -7,7 +7,13 @@ const baseTransform = require("./plugins/transform.plugin");
 
 const KycSchema = new Schema(
   {
-    userId: { type: Schema.Types.ObjectId, ref: User, required: true, unique: true, index: true },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: User,
+      required: true,
+      unique: true,
+      index: true,
+    },
 
     pan: {
       number: { type: String, trim: true, select: false },
@@ -57,6 +63,17 @@ const KycSchema = new Schema(
       verifiedAt: { type: Date },
     },
 
+    selfie: {
+      image: [ImageSchema],
+      status: {
+        type: String,
+        enum: Object.values(KYC_STATUS),
+        default: KYC_STATUS.NOT_SUBMITTED,
+      },
+      rejectionReason: { type: String, default: null },
+      verifiedAt: { type: Date },
+    },
+
     status: {
       type: String,
       enum: Object.values(KYC_STATUS),
@@ -76,8 +93,13 @@ KycSchema.pre("save", function (next) {
   if (this.isModified("aadhaar.number") && this.aadhaar?.number) {
     this.aadhaar.number = encryptField(this.aadhaar.number);
   }
-  if (this.isModified("bankDetails.accountNumber") && this.bankDetails?.accountNumber) {
-    this.bankDetails.accountNumber = encryptField(this.bankDetails.accountNumber);
+  if (
+    this.isModified("bankDetails.accountNumber") &&
+    this.bankDetails?.accountNumber
+  ) {
+    this.bankDetails.accountNumber = encryptField(
+      this.bankDetails.accountNumber,
+    );
   }
   next();
 });
@@ -85,7 +107,8 @@ KycSchema.pre("save", function (next) {
 // Decrypt after retrieval
 const decryptDoc = (doc) => {
   if (doc.pan?.number) doc.pan.number = decryptField(doc.pan.number);
-  if (doc.aadhaar?.number) doc.aadhaar.number = decryptField(doc.aadhaar.number);
+  if (doc.aadhaar?.number)
+    doc.aadhaar.number = decryptField(doc.aadhaar.number);
   if (doc.bankDetails?.accountNumber) {
     doc.bankDetails.accountNumber = decryptField(doc.bankDetails.accountNumber);
   }

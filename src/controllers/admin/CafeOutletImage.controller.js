@@ -46,6 +46,7 @@ class CafeOutletImageController {
 
   static setBrochure = asyncHandler(async (req, res) => {
     if (!req.file) throw new ApiError(400, "Brochure file is required");
+    console.log("reg file:",req.file)
 
     const data = await CafeOutletImageService.setBrochure({
       cafeOutletId: req.params.cafeOutletId,

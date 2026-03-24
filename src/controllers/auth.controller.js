@@ -12,8 +12,8 @@ class AuthController {
 
   static sendOtp = asyncHandler(async (req, res) => {
     const { phone, referralCode } = req.body;
-
     const message = await authService.sendOtp({ phone, referralCode });
+   
 
     return res.sendRes(200, null, message);
   });

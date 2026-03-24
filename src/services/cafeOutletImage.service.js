@@ -132,6 +132,7 @@ class CafeOutletImageService {
     }
 
     const doc = await uploadDocumentToS3({
+     
       file,
       folderName: `cafes/${cafeOutletId}/brochure`,
     });

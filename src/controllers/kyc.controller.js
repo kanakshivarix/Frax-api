@@ -50,6 +50,14 @@ class KycController {
 
     return res.sendRes(200, result);
   });
-}
 
+static submitSelfie = asyncHandler(async (req, res) => {
+  await KycService.submitSelfie({
+    userId: req.user.userId,
+    files: req.files?.image || [],
+  });
+
+  return res.sendRes(200, null, "Selfie uploaded successfully");
+});
+}
 module.exports = KycController;

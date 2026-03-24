@@ -22,7 +22,10 @@ class CafeOutletService {
         totalShares,
       });
 
-      throw new ApiError(400, "pricePerShare × totalShares must equal totalSetupCost");
+      throw new ApiError(
+        400,
+        "pricePerShare × totalShares must equal totalSetupCost",
+      );
     }
 
     const outletCode = `CAF-${Date.now().toString(36).toUpperCase()}`;
@@ -121,6 +124,51 @@ class CafeOutletService {
       totalPages: Math.ceil(total / limit),
       items,
     };
+  }
+  static async updateCafeStatus(cafeId, status) {
+    const allowedStatuses = [
+      "DRAFT",
+      "LIVE",
+      "FULLY_FUNDED",
+      "SPV_IN_PROCESS",
+      "OPERATIONAL",
+    ];
+
+    if (!allowedStatuses.includes(status)) {
+      throw new ApiError(400, "Invalid status value");
+    }
+
+    const cafe = await CafeOutletRepository.updateById(cafeId, { status });
+
+    if (!cafe) {
+      throw new ApiError(404, "Cafe not found");
+    }
+
+    return cafe;
+  }
+  static async updateCafe({ cafeId, updateData }) {
+    const cafe = await CafeOutletRepository.existsById(cafeId);
+    if (!cafe) throw new ApiError(404, "Cafe not found");
+
+    const allowedFields = [
+      "pincode",
+      "fullAddress",
+      "projectedROI",
+      "carpetAreaSqFt",
+      "seatingCapacity",
+      "description",
+      "highlights",
+    ];
+
+    const filteredData = {};
+
+    for (const key of allowedFields) {
+      if (updateData[key] !== undefined) {
+        filteredData[key] = updateData[key];
+      }
+    }
+
+    return CafeOutletRepository.updateById(cafeId, filteredData);
   }
 }
 

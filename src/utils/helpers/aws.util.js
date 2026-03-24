@@ -1,6 +1,10 @@
 const path = require("path");
 const crypto = require("crypto");
-const { PutObjectCommand, DeleteObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
+const {
+  PutObjectCommand,
+  DeleteObjectCommand,
+  GetObjectCommand,
+} = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const ApiError = require("../../errors/ApiErrors");
 const { generateChecksum } = require("./common.util");
@@ -8,7 +12,11 @@ const { AWS_S3_BUCKET_NAME } = require("../../configs/env.config");
 const { logger } = require("./logger.util");
 const { s3Client } = require("../../configs/aws.config");
 
-const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "application/pdf"];
+const ALLOWED_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "application/pdf",
+];
 
 /**
  * Sanitizes a filename for safe use as S3 key
@@ -76,7 +84,8 @@ async function uploadImageToS3({ file, folderName }) {
 
   // Use original extension in filename (sanitized)
   const safeFileName = sanitizeFileName(
-    path.basename(file.originalname, path.extname(file.originalname)) + `.${finalExt}`,
+    path.basename(file.originalname, path.extname(file.originalname)) +
+      `.${finalExt}`,
   );
 
   const key = `${folderName}/${Date.now()}-${crypto.randomUUID()}-${safeFileName}`;
@@ -121,7 +130,8 @@ async function uploadDocumentToS3({ file, folderName }) {
   const finalExt = detected.ext || "bin"; // fallback, but file-type usually gives good ext
 
   const safeFileName = sanitizeFileName(
-    path.basename(file.originalname, path.extname(file.originalname)) + `.${finalExt}`,
+    path.basename(file.originalname, path.extname(file.originalname)) +
+      `.${finalExt}`,
   );
 
   const key = `${folderName}/${Date.now()}-${crypto.randomUUID()}-${safeFileName}`;
@@ -151,7 +161,9 @@ async function getSignedUrlFromS3(s3Key) {
       Bucket: AWS_S3_BUCKET_NAME,
       Key: s3Key,
     });
-    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+    const signedUrl = await getSignedUrl(s3Client, command, {
+      expiresIn: 3600,
+    });
     return signedUrl;
   } catch (error) {
     logger.error("S3 signed URL error:", error);

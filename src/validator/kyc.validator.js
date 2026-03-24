@@ -51,7 +51,7 @@ module.exports = {
     .object({
       userId: objectIdSchema,
 
-      step: z.enum(["pan", "aadhaar", "bankDetails"]),
+      step: z.enum(["pan", "aadhaar", "bankDetails","selfie"]),
 
       status: z.enum([KYC_STATUS.VERIFIED, KYC_STATUS.REJECTED]),
 

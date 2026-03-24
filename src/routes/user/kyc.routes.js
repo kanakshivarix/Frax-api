@@ -45,6 +45,12 @@ router.post(
   // validate(kycValidator.submitAddress),
   KycController.submitAddress,
 );
+router.post(
+  "/selfie",
+  authMiddleware,
+  upload.fields([{ name: "image", maxCount: 3 }]),
+  KycController.submitSelfie,
+);
 
 // Quick KYC status (lightweight)
 router.get("/status", authMiddleware, KycController.getKycStatus);

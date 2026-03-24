@@ -15,6 +15,24 @@ class AdminCafeOutletController {
     const result = await CafeOutletService.listAdminCafes(req.query);
     return res.sendRes(200, result, "Admin cafes fetched");
   });
+  static changeStatus = asyncHandler(async (req, res) => {
+    const { cafeId } = req.params;
+    const { status } = req.body;
+
+    const updatedCafe = await CafeOutletService.updateCafeStatus(cafeId, status);
+
+    return res.sendRes(200, updatedCafe, "Cafe status updated successfully");
+  });
+  static update = asyncHandler(async (req, res) => {
+  const { cafeId } = req.params;
+
+  const updated = await CafeOutletService.updateCafe({
+    cafeId,
+    updateData: req.body,
+  });
+
+  return res.sendRes(200, updated, "Cafe updated successfully");
+});
 }
 
 module.exports = AdminCafeOutletController;

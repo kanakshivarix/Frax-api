@@ -4,57 +4,42 @@ const ApiError = require("../errors/ApiErrors");
 
 class KycRepository {
   /**
-   * 🔁 Derive global KYC status from document
-   * Single source of truth
+   * 🔁 Derive global KYC status
    */
   _computeGlobalStatusFromDoc(doc) {
     const stepStatuses = [
       doc.pan?.status ?? KYC_STATUS.NOT_SUBMITTED,
       doc.aadhaar?.status ?? KYC_STATUS.NOT_SUBMITTED,
       doc.bankDetails?.status ?? KYC_STATUS.NOT_SUBMITTED,
+      doc.selfie?.status ?? KYC_STATUS.NOT_SUBMITTED, // ✅ added
     ];
 
     const allVerified = stepStatuses.every((s) => s === KYC_STATUS.VERIFIED);
-
     const allRejected = stepStatuses.every((s) => s === KYC_STATUS.REJECTED);
-
     const anyTouched = stepStatuses.some((s) => s !== KYC_STATUS.NOT_SUBMITTED);
 
-    if (allVerified) {
-      return KYC_STATUS.VERIFIED;
-    }
-
-    if (allRejected) {
-      return KYC_STATUS.REJECTED;
-    }
-
-    if (anyTouched) {
-      return KYC_STATUS.IN_REVIEW;
-    }
+    if (allVerified) return KYC_STATUS.VERIFIED;
+    if (allRejected) return KYC_STATUS.REJECTED;
+    if (anyTouched) return KYC_STATUS.IN_REVIEW;
 
     return KYC_STATUS.NOT_SUBMITTED;
   }
 
   /**
-   * Get or create KYC document
+   * Get or create KYC
    */
   async getOrCreate(userId) {
     let doc = await Kyc.findOne({ userId });
-    if (!doc) {
-      doc = await Kyc.create({ userId });
-    }
+    if (!doc) doc = await Kyc.create({ userId });
     return doc;
   }
 
-  /**
-   * Get KYC by userId
-   */
   async findByUserId(userId) {
     return Kyc.findOne({ userId });
   }
 
   /**
-   * PAN submission (User)
+   * PAN
    */
   async upsertPan({ userId, panNumber, image }) {
     const doc = await this.getOrCreate(userId);
@@ -70,12 +55,12 @@ class KycRepository {
     doc.status = this._computeGlobalStatusFromDoc(doc);
     doc.verifiedAt = null;
 
-    await doc.save(); // encryption hooks run
+    await doc.save();
     return doc;
   }
 
   /**
-   * Aadhaar submission (User)
+   * Aadhaar
    */
   async upsertAadhaar({ userId, aadhaarNumber, front, back }) {
     const doc = await this.getOrCreate(userId);
@@ -97,7 +82,7 @@ class KycRepository {
   }
 
   /**
-   * Bank submission (User)
+   * Bank
    */
   async upsertBank({ userId, accountNumber, ifscCode, bankName, accountHolderName, proofs }) {
     const doc = await this.getOrCreate(userId);
@@ -121,8 +106,27 @@ class KycRepository {
   }
 
   /**
-   * Address submission (User)
-   * Does NOT affect KYC status
+   * Selfie ✅ NEW
+   */
+  async upsertSelfie({ userId, images }) {
+    const doc = await this.getOrCreate(userId);
+
+    doc.selfie = {
+      image: images,
+      status: KYC_STATUS.SUBMITTED,
+      rejectionReason: null,
+      verifiedAt: null,
+    };
+
+    doc.status = this._computeGlobalStatusFromDoc(doc);
+    doc.verifiedAt = null;
+
+    await doc.save();
+    return doc;
+  }
+
+  /**
+   * Address
    */
   async upsertAddress({ userId, address }) {
     const doc = await this.getOrCreate(userId);
@@ -132,12 +136,11 @@ class KycRepository {
   }
 
   /**
-   * KYC verification / rejection (Admin ONLY)
+   * Admin update
    */
   async updateStepStatus({ userId, step, status, rejectionReason = null }) {
     const now = new Date();
 
-    // 1️⃣ Update step explicitly (admin authority)
     await Kyc.updateOne(
       { userId },
       {
@@ -149,13 +152,9 @@ class KycRepository {
       },
     );
 
-    // 2️⃣ Fetch updated doc
     const kyc = await Kyc.findOne({ userId });
-    if (!kyc) {
-      throw new ApiError(404, "KYC record not found");
-    }
+    if (!kyc) throw new ApiError(404, "KYC record not found");
 
-    // 3️⃣ Recompute global status deterministically
     const globalStatus = this._computeGlobalStatusFromDoc(kyc);
 
     await Kyc.updateOne(
@@ -171,6 +170,9 @@ class KycRepository {
     return Kyc.findOne({ userId });
   }
 
+  /**
+   * Find image
+   */
   async findImageById({ userId, imageId }) {
     const kyc = await Kyc.findOne({ userId });
     if (!kyc) return null;
@@ -186,8 +188,14 @@ class KycRepository {
       images.push(...kyc.bankDetails.proofs);
     }
 
+    if (kyc.selfie?.image?.length) {
+      images.push(...kyc.selfie.image); 
+    }
+
     return images.find((img) => img._id.toString() === imageId) || null;
   }
+
+
   async list({ page, limit, status, search }) {
     const skip = (page - 1) * limit;
 
@@ -196,8 +204,6 @@ class KycRepository {
 
     const pipeline = [
       { $match: match },
-
-      // join user
       {
         $lookup: {
           from: "users",
@@ -233,6 +239,8 @@ class KycRepository {
           pan: 1,
           aadhaar: 1,
           bankDetails: 1,
+          selfie: 1, // ✅ added
+
           status: 1,
           createdAt: 1,
           updatedAt: 1,
@@ -247,7 +255,10 @@ class KycRepository {
       },
     );
 
-    const [data, total] = await Promise.all([Kyc.aggregate(pipeline), Kyc.countDocuments(match)]);
+    const [data, total] = await Promise.all([
+      Kyc.aggregate(pipeline),
+      Kyc.countDocuments(match),
+    ]);
 
     return {
       data,
@@ -257,6 +268,7 @@ class KycRepository {
       totalPages: Math.ceil(total / limit),
     };
   }
+
 
   async findForAdminDetail(userId) {
     const doc = await Kyc.findOne({ userId })

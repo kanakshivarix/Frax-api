@@ -102,6 +102,7 @@ class KycService {
   }
 
   async submitBank({ userId, body, proofs }) {
+  
     const log = logger.child({ action: "submitBank", userId });
 
     const existing = await kycRepo.findByUserId(userId);
@@ -162,6 +163,48 @@ class KycService {
 
     log.info("Address submitted");
   }
+  async submitSelfie({ userId, files }) {
+  const existing = await kycRepo.findByUserId(userId);
+
+  const selfieStatus = existing?.selfie?.status ?? KYC_STATUS.NOT_SUBMITTED;
+
+  if (selfieStatus && ![KYC_STATUS.NOT_SUBMITTED, KYC_STATUS.REJECTED].includes(selfieStatus)) {
+    throw new ApiError(403, `Selfie already ${selfieStatus}`);
+  }
+
+  if (!files || files.length === 0) {
+    throw new ApiError(400, "Selfie image required");
+  }
+
+  let uploaded = [];
+
+  try {
+    for (const file of files) {
+      uploaded.push(
+        await uploadDocumentToS3({
+          file,
+          folderName: `kyc/${userId}/selfie`,
+        }),
+      );
+    }
+
+    const doc = await kycRepo.getOrCreate(userId);
+
+    doc.selfie = {
+      image: uploaded,
+      status: KYC_STATUS.SUBMITTED,
+      rejectionReason: null,
+      verifiedAt: null,
+    };
+
+    doc.status = kycRepo._computeGlobalStatusFromDoc(doc);
+
+    await doc.save();
+
+  } catch (err) {
+    throw err;
+  }
+}
 
   async getKycStatus({ userId }) {
     const kyc = await kycRepo.findByUserId(userId);
@@ -173,6 +216,7 @@ class KycService {
           pan: KYC_STATUS.NOT_SUBMITTED,
           aadhaar: KYC_STATUS.NOT_SUBMITTED,
           bank: KYC_STATUS.NOT_SUBMITTED,
+          selfie:KYC_STATUS.NOT_SUBMITTED
         },
       };
     }
@@ -196,6 +240,13 @@ class KycService {
               ? kyc.bankDetails.rejectionReason
               : null,
         },
+         selfie: { // ✅ ADD
+    status: kyc.selfie?.status,
+    rejectionReason:
+      kyc.selfie?.status === KYC_STATUS.REJECTED
+        ? kyc.selfie.rejectionReason
+        : null,
+  },
       },
     };
   }

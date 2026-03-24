@@ -25,7 +25,7 @@ const investmentRoute = require("./user/investment.route");
 //admin
 router.use("/admin/kyc", adminKycRoute);
 router.use("/admin/cafe", adminCafeRoute);
-router.use("/admin/cafe/upload", adminCafeImageRoute);
+router.use("/admin/cafeupload", adminCafeImageRoute);
 router.use("/admin/investment", adminInvestmentRoute);
 
 // router.use("/admin/ev", adminEvRoute);

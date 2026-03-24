@@ -1,5 +1,10 @@
 const { z } = require("zod");
-const { passwordSchema, phoneSchema, fullNameSchema } = require("./common.validator");
+const {
+  passwordSchema,
+  phoneSchema,
+  firstNameSchema,
+  lastNameSchema,
+} = require("./common.validator");
 
 /**
  * Action-based schemas
@@ -7,7 +12,19 @@ const { passwordSchema, phoneSchema, fullNameSchema } = require("./common.valida
 module.exports = {
   updateProfile: z
     .object({
-      fullname: fullNameSchema.optional(),
+      firstName: z
+        .string()
+        .trim()
+        .min(2, "First name must be at least 2 characters")
+        .max(50, "First name must be at most 50 characters")
+        .optional(),
+
+      lastName: z
+        .string()
+        .trim()
+        .min(2, "Last name must be at least 2 characters")
+        .max(50, "Last name must be at most 50 characters")
+        .optional(),
     })
     .strict(),
 
@@ -34,7 +51,10 @@ module.exports = {
     .object({
       gstNo: z.string().trim().optional(),
       company: z.string().trim().optional(),
-      address: z.string().trim().min(5, "Address must be at least 5 characters"),
+      address: z
+        .string()
+        .trim()
+        .min(5, "Address must be at least 5 characters"),
       country: z.string().trim().min(2, "Country is required"),
       state: z.string().trim().min(2, "State is required"),
       city: z.string().trim().min(2, "City is required"),

@@ -1,5 +1,9 @@
 const { z } = require("zod");
-const { passwordSchema, emailSchema, phoneSchema } = require("./common.validator");
+const {
+  passwordSchema,
+  emailSchema,
+  phoneSchema,
+} = require("./common.validator");
 
 module.exports = {
   sendOtp: z
@@ -39,16 +43,24 @@ module.exports = {
       password: passwordSchema,
       email: emailSchema,
       phone: phoneSchema,
-      fullname: z
+      firstName: z
         .string()
-        .min(2, "name can not be less than 2 character")
-        .max(100, "name can not be more than 100 character"),
+        .min(2, "First name can not be less than 2 character")
+        .max(50, "First name can not be more than 50 character"),
+
+      lastName: z
+        .string()
+        .min(2, "Last name can not be less than 2 character")
+        .max(50, "Last name can not be more than 50 character"),
     })
     .strict(),
 
   registerWithReferralCode: z
     .object({
-      referralCode: z.string().length(8, "referralCode must be 8 character").optional(),
+      referralCode: z
+        .string()
+        .length(8, "referralCode must be 8 character")
+        .optional(),
     })
     .strict(),
 

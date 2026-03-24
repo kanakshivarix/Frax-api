@@ -1,7 +1,13 @@
 const multer = require("multer");
 const ApiError = require("../errors/ApiErrors");
 
-const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png"];
+const ALLOWED_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+  "application/pdf",
+];
 
 const upload = multer({
   storage: multer.memoryStorage(),

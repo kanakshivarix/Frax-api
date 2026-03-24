@@ -112,7 +112,7 @@ class AuthService {
     return {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
-      user: { id: user._id, email: user.email, fullname: user.fullname, phone: user.phone },
+      user: { id: user._id, email: user.email, firstName: user.firstName,lastName:user.lastName, phone: user.phone },
     };
   }
 
@@ -232,7 +232,7 @@ class AuthService {
   }
 
   //! not used will be removed
-  async register({ email, password, fullname, phone, referralCode }) {
+  async register({ email, password, firstName,lastName, phone, referralCode }) {
     const log = logger.child({ action: "register" });
 
     const existingEmail = await userRepo.findByEmail(email);
@@ -261,7 +261,8 @@ class AuthService {
       password: await hashPassword(password),
       verificationToken,
       verificationTokenExpires: expires,
-      fullname,
+      firstName,
+      lastName,
       phone,
       referredBy,
     });
