@@ -27,9 +27,9 @@ class InvestmentService {
       }
 
       const kyc = await KycRepo.findByUserId(userId);
-      if (!kyc || kyc.status !== KYC_STATUS.VERIFIED) {
-        throw new ApiError(400, "KYC not verified");
-      }
+      // if (!kyc || kyc.status !== KYC_STATUS.VERIFIED) {
+      //   throw new ApiError(400, "KYC not verified");
+      // }
 
       const outlet = await CafeOutletRepo.findLiveOutlet(body.outletId, session);
       if (!outlet) {

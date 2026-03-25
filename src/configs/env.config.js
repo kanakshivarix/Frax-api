@@ -33,7 +33,6 @@ const envSchema = z.object({
 
   ADMIN_EMAIL: z.string().email("ADMIN_EMAIL must be a valid email"),
   ADMIN_PASS: z.string().min(4, "ADMIN_PASS must be at least 4 characters"),
-  ADMIN_PHONE:z.string()
 });
 
 /**
