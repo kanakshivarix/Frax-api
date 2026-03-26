@@ -10,6 +10,17 @@ module.exports = {
     .object({
       phone: phoneSchema,
       referralCode: z.string().trim().optional(),
+
+      consents: z
+        .object({
+          isAdult: z.boolean().optional(),
+          acceptTerms: z.boolean().optional(),
+          understandRisk: z.boolean().optional(),
+          kycAgree: z.boolean().optional(),
+          fundsLegal: z.boolean().optional(),
+          notProxy: z.boolean().optional(),
+        })
+        .optional(),
     })
     .strict(),
 

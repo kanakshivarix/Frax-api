@@ -36,5 +36,11 @@ router.patch(
   validate(validation.updateCafeOutlet, REQUEST_TARGET.BODY),
   AdminCafeOutletController.update
 );
-
+router.get(
+  "/:cafeId",
+  authMiddleware,
+  allowed(User_Type.SUPER_ADMIN),
+  validate(validation.getById, REQUEST_TARGET.PARAMS),
+  AdminCafeOutletController.getById
+);
 module.exports = router;

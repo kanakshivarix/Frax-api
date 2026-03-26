@@ -22,9 +22,9 @@ class InvestmentService {
         throw new ApiError(403, "User account is disabled");
       }
 
-      if (!user.isEmailVerified) {
-        throw new ApiError(400, "Email not verified");
-      }
+      // if (!user.isEmailVerified) {
+      //   throw new ApiError(400, "Email not verified");
+      // }
 
       const kyc = await KycRepo.findByUserId(userId);
       if (!kyc || kyc.status !== KYC_STATUS.VERIFIED) {

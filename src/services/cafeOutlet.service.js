@@ -170,6 +170,13 @@ class CafeOutletService {
 
     return CafeOutletRepository.updateById(cafeId, filteredData);
   }
+  static async getById(cafeId) {
+    const cafe = await CafeOutletRepository.findById(cafeId);
+    if (!cafe) {
+      throw new ApiError(404, "Cafe not found");
+    }
+    return cafe;
+  }
 }
 
 module.exports = CafeOutletService;

@@ -127,5 +127,7 @@ module.exports = {
 
   description: z.string().optional(),
   highlights: z.array(z.string()).optional(),
-}).strict()
+  
+}).strict(),
+ getById :z.object({cafeId: z.string().min(1)}),
 };

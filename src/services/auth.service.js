@@ -1,5 +1,8 @@
 const crypto = require("crypto");
-const { comparePassword, hashPassword } = require("../utils/helpers/bcrypt.util");
+const {
+  comparePassword,
+  hashPassword,
+} = require("../utils/helpers/bcrypt.util");
 const ApiError = require("../errors/ApiErrors");
 const { logger } = require("../utils/helpers/logger.util");
 const { generateJWTToken } = require("../utils/token.util");
@@ -10,6 +13,7 @@ const kycRepo = require("../repositories/kyc.repository");
 const otpSessionRepo = require("../repositories/otpSession.repository");
 const { generateOtp, getOtpExpiry } = require("../utils/otp.util");
 const MailService = require("./mail.service");
+const User = require("../models/user.model");
 
 class AuthService {
   async loginWithEmail({ email, password }) {
@@ -51,26 +55,49 @@ class AuthService {
       message: "User logged in",
     };
   }
+  async sendOtp({ phone, referralCode, consents }) {
+  const log = logger.child({ action: "sendOtp", phone });
 
-  async sendOtp({ phone, referralCode }) {
-    const log = logger.child({ action: "sendOtp", phone });
+  const existingUser = await User.findOne({ phone });
 
-    const otp = generateOtp();
-    const otpExpires = getOtpExpiry();
-
-    await otpSessionRepo.upsert({
-      phone,
-      otp,
-      otpExpires,
-      referralCode: referralCode || null,
-    });
-
-    // await smsService.sendOtp(phone, otp);
-
-    log.debug("OTP generated and sent");
-    return "OTP sent to phone";
+ 
+  if (existingUser && consents) {
+    throw new ApiError(400, "investor already exists");
   }
 
+  
+  if (!existingUser) {
+    const isValidConsents =
+      consents?.isAdult === true &&
+      consents?.acceptTerms === true &&
+      consents?.understandRisk === true &&
+      consents?.kycAgree === true &&
+      consents?.fundsLegal === true &&
+      consents?.notProxy === true;
+
+    if (!isValidConsents) {
+      throw new ApiError(400, "Please accept all terms and conditions");
+    }
+  }
+
+  const otp = generateOtp();
+  const otpExpires = getOtpExpiry();
+
+  const existingSession = await otpSessionRepo.findByPhone(phone);
+
+  await otpSessionRepo.upsert({
+    phone,
+    otp,
+    otpExpires,
+    referralCode: existingSession?.referralCode || referralCode || null,
+  });
+
+  log.debug("OTP generated and sent");
+
+  return existingUser
+    ? "OTP sent for login"
+    : "OTP sent for registration";
+}
   async verifyOtpAndLogin({ phone, otp }) {
     const log = logger.child({ action: "verifyOtpAndLogin", phone });
 
@@ -82,12 +109,14 @@ class AuthService {
     }
 
     let user = await userRepo.findByPhone(phone);
-    // FIRST TIME USER
+    
     if (!user) {
       let referredBy = null;
 
       if (session.referralCode) {
-        const referrer = await userRepo.findByReferralCode(session.referralCode);
+        const referrer = await userRepo.findByReferralCode(
+          session.referralCode,
+        );
         if (referrer) referredBy = referrer._id;
       }
 
@@ -112,7 +141,13 @@ class AuthService {
     return {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
-      user: { id: user._id, email: user.email, firstName: user.firstName,lastName:user.lastName, phone: user.phone },
+      user: {
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phone: user.phone,
+      },
     };
   }
 
@@ -154,7 +189,10 @@ class AuthService {
       user.verificationTokenExpires > Date.now() &&
       user.unverifiedEmail === email
     ) {
-      throw new ApiError(429, "Verification already sent. Please wait before retrying.");
+      throw new ApiError(
+        429,
+        "Verification already sent. Please wait before retrying.",
+      );
     }
 
     const existing = await userRepo.findByEmail(email);
@@ -232,7 +270,14 @@ class AuthService {
   }
 
   //! not used will be removed
-  async register({ email, password, firstName,lastName, phone, referralCode }) {
+  async register({
+    email,
+    password,
+    firstName,
+    lastName,
+    phone,
+    referralCode,
+  }) {
     const log = logger.child({ action: "register" });
 
     const existingEmail = await userRepo.findByEmail(email);
