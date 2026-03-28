@@ -1,4 +1,4 @@
-require("dotenv").config({ path: "../.env" }); 
+require("dotenv").config({ path: "../.env" });
 const mongoose = require("mongoose");
 
 const { connectToMongoDB } = require("../src/configs/db.config");
@@ -23,9 +23,8 @@ const seedAdmin = async () => {
 
     const admin = new User({
       firstName: "Super",
-      lastName:"Admin",
+      lastName: "Admin",
       email: ADMIN_EMAIL,
-      phone: ADMIN_PHONE,
       password: hashedPassword,
       role: User_Type.SUPER_ADMIN,
       isEmailVerified: true,

@@ -6,9 +6,9 @@ const baseTransform = require("./plugins/transform.plugin");
 const UserSchema = new Schema(
   {
     firstName: { type: String },
-    lastName:{type:String},
+    lastName: { type: String },
     email: { type: String, unique: true, sparse: true },
-    phone: { type: String, unique: true },
+    phone: { type: String, unique: true, sparse: true },
     isDisabled: { type: Boolean, default: false },
     refreshToken: { type: String },
     isEmailVerified: { type: Boolean, default: false },
