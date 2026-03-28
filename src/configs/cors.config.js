@@ -3,8 +3,10 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://subcheliform-tentier-lanie.ngrok-free.dev",
   "https://commercially-untrumping-kathrin.ngrok-free.dev",
+  "https://commercially-untrumping-kathrin.ngrok-free.dev",
   "http://127.0.0.1:5173",
   "http://127.0.0.1:5174",
+  
  
 ];
 

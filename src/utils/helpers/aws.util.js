@@ -160,9 +160,11 @@ async function getSignedUrlFromS3(s3Key) {
     const command = new GetObjectCommand({
       Bucket: AWS_S3_BUCKET_NAME,
       Key: s3Key,
-    });
+  
+    })
     const signedUrl = await getSignedUrl(s3Client, command, {
       expiresIn: 3600,
+      
     });
     return signedUrl;
   } catch (error) {

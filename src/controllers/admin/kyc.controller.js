@@ -28,7 +28,7 @@ class KycAdminController {
   });
 
   static getKycDocument = asyncHandler(async (req, res) => {
-    const { userId } = req.body;
+    const { userId } = req.query;
     const { imageId } = req.params;
 
     const result = await AdminKycService.getKycDocument({

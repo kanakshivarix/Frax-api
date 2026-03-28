@@ -12,7 +12,7 @@ class AdminKycService {
     rejectionReason,
   }) {
     const log = logger.child({ action: "updateKycDoc", userId, step, status });
-    if (!["pan", "aadhaar", "bankDetails","selfie"].includes(step)) {
+    if (!["pan", "aadhaar", "bankDetails", "selfie"].includes(step)) {
       throw new ApiError(400, "Invalid KYC step");
     }
 
