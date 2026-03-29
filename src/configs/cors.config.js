@@ -1,4 +1,4 @@
-const allowedOrigins = ["http://localhost:3000", "http://127.0.0.1:5174", "http://localhost:5173/" ,"http://cafewafe.com/" , "http://admin.cafewafe.com/"];
+const allowedOrigins = ["http://localhost:3000", "http://127.0.0.1:5174", "http://localhost:5173/" ,"https://cafewafe.com/" , "https://admin.cafewafe.com/"];
 
 exports.corsOptions = {
   origin: (origin, callback) => {
