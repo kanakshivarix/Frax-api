@@ -3,6 +3,7 @@ const InvestmentRepo = require("../../repositories/investment.repository");
 const CafeOutletRepo = require("../../repositories/cafeOutlet.repository");
 const ApiError = require("../../errors/ApiErrors");
 const { logger } = require("../../utils/helpers/logger.util");
+const s3Util = require("../../utils/helpers/aws.util");
 
 class AdminInvestmentService {
   static async approveInvestment({ investmentId, adminId }) {
@@ -121,7 +122,6 @@ class AdminInvestmentService {
       },
     };
   }
-
   static async getInvestmentById(investmentId) {
     const investment = await InvestmentRepo.findAdminById(investmentId);
 
@@ -129,7 +129,23 @@ class AdminInvestmentService {
       throw new ApiError(404, "Investment not found");
     }
 
-    return investment;
+    const investmentData = investment.toObject();
+
+    if (investmentData.payment?.proof?.key) {
+      try {
+        
+        const signedUrl = await s3Util.getSignedUrlFromS3(investmentData.payment.proof.key);
+        
+  
+        investmentData.payment.proof.url = signedUrl;
+        
+        logger.info("Signed URL generated successfully", { investmentId });
+      } catch (err) {
+        logger.error({ err }, "Failed to generate signed URL");
+      }
+    }
+
+    return investmentData; 
   }
 }
 

@@ -38,6 +38,12 @@ class KycAdminController {
 
     return res.sendRes(200, result, "Document URL generated");
   });
+
+  static downloadAll = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    // Service ko direct res pass kar rahe hain streaming ke liye
+    await AdminKycService.downloadAllKycAsZip({ userId, res });
+});
 }
 
 module.exports = KycAdminController;

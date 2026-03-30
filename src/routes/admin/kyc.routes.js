@@ -42,5 +42,12 @@ router.get(
   allowed(User_Type.SUPER_ADMIN),
   AdminKycController.getKycDocument,
 );
+// ... existing routes
+router.get(
+  "/download-all/:userId",
+  authMiddleware,
+  allowed(User_Type.SUPER_ADMIN),
+  AdminKycController.downloadAll
+);
 
 module.exports = router;
