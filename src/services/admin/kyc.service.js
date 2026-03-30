@@ -47,7 +47,10 @@ class AdminKycService {
       throw new ApiError(404, "Document not found");
     }
 
-    const url = await getSignedUrlFromS3(image.key);
+    const url = await getSignedUrlFromS3(image.key, {
+      download: true,
+      fileName: image?.originalName || "document.jpg",
+    });
 
     log.info("Signed URL generated");
 
