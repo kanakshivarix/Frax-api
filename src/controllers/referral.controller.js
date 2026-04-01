@@ -8,7 +8,7 @@ class ReferralController {
    * @User
    */
   static getReferralLink = asyncHandler(async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user.userId;
     logger.info(`Referral link request for userId: ${userId}`);
     const referralLink = await ReferralService.getReferralLink(userId);
     logger.info(`Referral link generated for userId: ${userId}`);
@@ -45,6 +45,13 @@ class ReferralController {
     logger.info(`Earnings overview fetched for userId: ${userId}`);
     res.status(200).json(new ApiResponse(200, earnings, "Earnings overview fetched"));
   });
+  static getReferralHistory=asyncHandler(async(req,res)=>{
+    const userId = req.user.userId;
+    console.log("user ",req.user)
+    logger.info(`Referral history request for userId: ${userId}`)
+    const history=await ReferralService.getReferralHistory(userId);
+    res.status(200).json(new ApiResponse(200,history,"Referral history fetched"))
+  })
 }
 
 module.exports = ReferralController;

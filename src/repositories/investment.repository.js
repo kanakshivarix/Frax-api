@@ -189,6 +189,14 @@ class InvestmentRepository {
       })
       .lean();
   }
+  static updateInvoice(investmentId,invoiceData,session)
+  {
+    return Investment.updateOne(
+      {_id:investmentId},
+      {$set:{invoice:invoiceData}},
+      {session}
+    )
+  }
 }
 
 module.exports = InvestmentRepository;

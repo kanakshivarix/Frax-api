@@ -9,4 +9,6 @@ router.get("/earnings", authMiddleware, ReferralController.getPeriodEarnings);
 
 router.get("/all-earnings", authMiddleware, ReferralController.getTotalEarningsTillToday);
 
+router.get('/history',authMiddleware,ReferralController.getReferralHistory)
+
 module.exports = router;

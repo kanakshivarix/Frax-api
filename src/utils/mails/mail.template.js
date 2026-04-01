@@ -6,8 +6,8 @@ const { logger } = require("../helpers/logger.util");
 const TEMPLATE_BASE_PATH = path.join(process.cwd(), "src", "views", "emails");
 
 const renderTemplate = async (templateName, data = {}) => {
+  const log = logger.child({ action: "renderEmailTemplate" });
   try {
-    const log = logger.child({ action: "renderEmailTemplate" });
     const templatePath = path.join(TEMPLATE_BASE_PATH, `${templateName}.ejs`);
 
     if (!fs.existsSync(templatePath)) {

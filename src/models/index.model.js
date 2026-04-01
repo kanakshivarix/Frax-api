@@ -1,4 +1,4 @@
-const User = require("./user.model");
+const {User} = require("./user.model");
 const Kyc = require("./kyc.model");
 const OtpSession = require("./otpSession.model");
 const CafeOutlet = require("./cafeOutlet.model");

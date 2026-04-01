@@ -49,4 +49,5 @@ UserSchema.pre("save", async function (next) {
 });
 
 UserSchema.plugin(baseTransform);
-module.exports = model(User, UserSchema);
+const UserModel = model(User, UserSchema);
+module.exports = { User: UserModel };

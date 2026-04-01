@@ -13,7 +13,7 @@ const kycRepo = require("../repositories/kyc.repository");
 const otpSessionRepo = require("../repositories/otpSession.repository");
 const { generateOtp, getOtpExpiry } = require("../utils/otp.util");
 const MailService = require("./mail.service");
-const User = require("../models/user.model");
+const {User} = require("../models/user.model");
 
 class AuthService {
   async loginWithEmail({ email, password }) {

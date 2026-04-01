@@ -1,11 +1,11 @@
 const ApiError = require("../errors/ApiErrors");
 const { logger } = require("../utils/helpers/logger.util");
 const { BASE_URL, constants } = require("../utils/constants/history.constant");
-const { ReferralEarning } = require("../../models/referralEarning.model");
-const { User } = require("../../models/user.model");
+const { ReferralEarning } = require("../models/referralEarning.model");
+const { User } = require("../models/user.model");
 const moment = require("moment-timezone");
 const { default: Decimal } = require("decimal.js");
-const { IncomeDistribution } = require("../../models/incomeDistribution.model");
+const { IncomeDistribution } = require("../models/incomeDistribution.model");
 
 class ReferralService {
   static async getReferralLink(userId) {
@@ -15,7 +15,7 @@ class ReferralService {
       logger.error(`User not found for userId: ${userId}`);
       throw new ApiError(404, "User not found");
     }
-    const referralLink = `${BASE_URL}/api/v1/auth/register?referralCode=${user.referralCode}`;
+    const referralLink = `${BASE_URL}/login?ref=${user.referralCode}`;
     logger.info(`Referral link generated for userId: ${userId}`);
     return referralLink;
   }
@@ -279,6 +279,20 @@ class ReferralService {
         })),
       },
     };
+  }
+
+  static async getReferralHistory(userId)
+  {
+    logger.info(`Fetching referral history for userId :${userId}`);
+    const referredUsers=await User.find({referredBy:userId})
+    .select("firstName lastName email createdAt")
+    .lean();
+    return referredUsers.map((user)=>({
+      userId:user._id,
+      name:`${user.firstName || ""} ${user.lastName || ""}`,
+      email:user.email,
+      joinedAt:user.createdAt,
+    }))
   }
 }
 

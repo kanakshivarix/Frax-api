@@ -1,15 +1,33 @@
 const { Schema, model } = require("mongoose");
 const ImageSchema = require("./schema/image.schema");
-const { User, CafeOutlet, Investment } = require("../constants/model.constants");
+const {
+  User,
+  CafeOutlet,
+  Investment,
+} = require("../constants/model.constants");
 const { Payment_Method } = require("../constants/app.constant");
 const baseTransform = require("./plugins/transform.plugin");
 
-const INVESTMENT_STATUS = ["PAYMENT_UPLOADED", "ADMIN_APPROVED", "ADMIN_REJECTED"];
+const INVESTMENT_STATUS = [
+  "PAYMENT_UPLOADED",
+  "ADMIN_APPROVED",
+  "ADMIN_REJECTED",
+];
 
 const InvestmentSchema = new Schema(
   {
-    userId: { type: Schema.Types.ObjectId, ref: User, required: true, index: true },
-    outletId: { type: Schema.Types.ObjectId, ref: CafeOutlet, required: true, index: true },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: User,
+      required: true,
+      index: true,
+    },
+    outletId: {
+      type: Schema.Types.ObjectId,
+      ref: CafeOutlet,
+      required: true,
+      index: true,
+    },
 
     shares: { type: Number, required: true, min: 1 },
     pricePerShare: { type: Number, required: true },
@@ -26,6 +44,19 @@ const InvestmentSchema = new Schema(
       utr: { type: String, required: true },
       paidAt: { type: Date, required: true },
       proof: { type: ImageSchema, required: true },
+    },
+    invoice: {
+      invoiceNumber: { type: String, unique: true, sparse: true },
+
+      file: {
+        key: { type: String }, 
+        originalName: { type: String }, 
+        mimeType: { type: String }, 
+        size: { type: Number },
+        checksum: { type: String },
+      },
+
+      generatedAt: { type: Date },
     },
 
     status: {

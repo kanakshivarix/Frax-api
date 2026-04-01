@@ -18,7 +18,7 @@ const cafeRoute = require("./user/cafeOutlet.routes");
 const investmentRoute = require("./user/investment.route");
 
 // const evRoute = require("./user/ev.routes");
-// const referralRoute = require("./user/referral.routes");
+ const referralRoute = require("./user/referral.routes");
 // const shareRoute = require("./user/share.routes");
 // const userIncome = require("./user/income.routes");
 
@@ -37,8 +37,9 @@ router.use("/user", userRoute);
 router.use("/kyc", userKycRoute);
 router.use("/cafe", cafeRoute);
 router.use("/investment", investmentRoute);
+
 // router.use("/ev", evRoute);
-// router.use("/referral", referralRoute);
+ router.use("/referral", referralRoute);
 // router.use("/share", shareRoute);
 // router.use("/income", userIncome);
 

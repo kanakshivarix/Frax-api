@@ -40,18 +40,28 @@ class UserService {
   }
 
   static async updateUserDetail({ userId, updateData }) {
-    const log = logger.child({ action: "updateUserDetail", userId });
+  const log = logger.child({ action: "updateUserDetail", userId });
 
-    const user = await userRepo.updateById(userId, updateData);
-    if (!user) {
-      log.warn("User not found");
-      throw new ApiError(404, "User not found");
-    }
-
-    log.info("User updated");
-    return user;
+  const existingUser = await userRepo.findById(userId);
+  if (!existingUser) {
+    log.warn("User not found");
+    throw new ApiError(404, "User not found");
   }
 
+  if (
+    updateData.phone &&
+    updateData.phone !== existingUser.phone
+  ) {
+    throw new ApiError(400, "Phone number cannot be changed");
+  }
+
+  delete updateData.phone;
+
+  const user = await userRepo.updateById(userId, updateData);
+
+  log.info("User updated");
+  return user;
+}
   static async changePassword({ userId, currentPassword, newPassword }) {
     const log = logger.child({ action: "changePassword", userId });
 

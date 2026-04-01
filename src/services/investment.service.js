@@ -31,7 +31,10 @@ class InvestmentService {
       //   throw new ApiError(400, "KYC not verified");
       // }
 
-      const outlet = await CafeOutletRepo.findLiveOutlet(body.outletId, session);
+      const outlet = await CafeOutletRepo.findLiveOutlet(
+        body.outletId,
+        session,
+      );
       if (!outlet) {
         throw new ApiError(404, "Outlet not investable");
       }
@@ -74,10 +77,17 @@ class InvestmentService {
       );
 
       // 🔒 Soft-lock shares (transactional)
-      const updateResult = await CafeOutletRepo.reserveShares(outlet._id, body.shares, session);
+      const updateResult = await CafeOutletRepo.reserveShares(
+        outlet._id,
+        body.shares,
+        session,
+      );
 
       if (updateResult.modifiedCount === 0) {
-        throw new ApiError(409, "Shares no longer available — someone else reserved them just now");
+        throw new ApiError(
+          409,
+          "Shares no longer available — someone else reserved them just now",
+        );
       }
 
       await session.commitTransaction();
@@ -124,9 +134,10 @@ class InvestmentService {
     if (!investment) {
       throw new ApiError(404, "Investment not found");
     }
+    
 
-    return investment;
+      return investment;
+    }
   }
-}
 
 module.exports = InvestmentService;

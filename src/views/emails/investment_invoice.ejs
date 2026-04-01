@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Investment Invoice</title>
+  <style>
+    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; }
+    .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+    .header h2 { margin: 0; color: #2c3e50; font-size: 28px; }
+    .header p { margin: 5px 0 0; color: #7f8c8d; }
+    .row { display: flex; justify-content: space-between; margin-bottom: 25px; }
+    .col { width: 48%; }
+    .section-title { font-size: 16px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+    .details p { margin: 5px 0; font-size: 14px; }
+    .details strong { color: #555; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th { background-color: #f8f9fa; color: #2c3e50; font-weight: 600; text-transform: uppercase; font-size: 12px; }
+    th, td { border: 1px solid #dee2e6; padding: 12px; text-align: left; font-size: 14px; }
+    .total-row td { font-weight: bold; background-color: #f8f9fa; }
+    .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>Investment Invoice</h2>
+    <p>Invoice #<%= invoiceNumber %> | Date: <%= new Date().toLocaleDateString() %></p>
+  </div>
+  <div class="row">
+    <div class="col details">
+      <div class="section-title">Investor Details</div>
+      <p><strong>Name:</strong> <%= user.firstName %> <%= user.lastName %></p>
+      <p><strong>Email:</strong> <%= user.email %></p>
+      <p><strong>Phone:</strong> <%= user.phone || 'N/A' %></p>
+    </div>
+    
+    <div class="col details">
+      <div class="section-title">Investment Details</div>
+      <p><strong>Reference:</strong> <%= investment.investmentRef %></p>
+      <p><strong>Payment Method:</strong> <%= investment.payment ? investment.payment.method : 'N/A' %></p>
+      <p><strong>Payment UTR:</strong> <%= investment.payment ? investment.payment.utr : 'N/A' %></p>
+      <p><strong>Time:</strong> <%= new Date().toLocaleTimeString() %></p>
+    </div>
+  </div>
+  <div class="details" style="margin-bottom: 30px;">
+    <div class="section-title">Cafe / Outlet Details</div>
+    <p><strong>Outlet Name:</strong> <%= outlet.outletName %></p>
+    <p><strong>Location:</strong> <%= outlet.city %>, <%= outlet.state %></p>
+    <p><strong>Address:</strong> <%= outlet.fullAddress %></p>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th>Shares</th>
+        <th>Price per Share</th>
+        <th>Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Investment in <%= outlet.outletName %></td>
+        <td><%= investment.shares %></td>
+        <td>Rs. <%= investment.pricePerShare %></td>
+        <td>Rs. <%= investment.totalAmount %></td>
+      </tr>
+      <tr class="total-row">
+        <td colspan="3" style="text-align: right;">Total Amount Paid</td>
+        <td>Rs. <%= investment.totalAmount %></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="footer">
+    <p>This is a computer-generated invoice and does not require a physical signature.</p>
+  </div>
+</body>
+</html>
