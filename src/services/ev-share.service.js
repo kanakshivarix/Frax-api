@@ -57,6 +57,19 @@ class EVShareService {
       sharePrice: ev.pricePerShare,
       evId,
     });
+    await ReferralService.createBinaryIncome(
+  userId,
+  evId,
+  shares * ev.pricePerShare
+);
+const monthlyProfit = ev.expectedMonthlyIncome;
+
+await ReferralService.createLifetimeIncome(
+  userId,
+  evId,
+  monthlyProfit
+);
+
     logger.info(`Shares purchased for userId: ${userId}, evId: ${evId}`);
     return "Shares purchased";
   }
@@ -109,6 +122,7 @@ class EVShareService {
     logger.info(`Found ${ownership.length} EVs for user ${userId}`);
     return ownership;
   }
+
 }
 
 module.exports = { EVShareService };

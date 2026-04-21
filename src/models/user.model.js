@@ -26,6 +26,7 @@ const UserSchema = new Schema(
     },
     referralCode: { type: String, unique: true },
     referredBy: { type: Schema.Types.ObjectId, ref: User, default: null },
+
     consents: {
       isAdult: { type: Boolean, default: false },
       acceptTerms: { type: Boolean, default: false },
@@ -33,17 +34,24 @@ const UserSchema = new Schema(
       kycAgree: { type: Boolean, default: false },
       fundsLegal: { type: Boolean, default: false },
       notProxy: { type: Boolean, default: false },
-      acceptedAt: { type: Date }
+      acceptedAt: { type: Date },
     },
-
+    binaryPairsPaid:{type:Number,default:0},
+    leftChild: { type: Schema.Types.ObjectId, ref: "User" },
+    rightChild: { type: Schema.Types.ObjectId, ref: "User" },
+    parentId: { type: Schema.Types.ObjectId, ref: "User" },
+    position: { type: String, enum: ["left", "right"] },
   },
-  { timestamps: true },
+ 
 );
 
 // Generate unique referral code
 UserSchema.pre("save", async function (next) {
   if (!this.referralCode) {
-    this.referralCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+    this.referralCode = Math.random()
+      .toString(36)
+      .substring(2, 10)
+      .toUpperCase();
   }
   next();
 });

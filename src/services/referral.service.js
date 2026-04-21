@@ -294,6 +294,62 @@ class ReferralService {
       joinedAt:user.createdAt,
     }))
   }
+  static async createBinaryIncome(userId, evId, amount) {
+  const user = await User.findById(userId);
+  if (!user.parentId) return;
+
+  const parent = await User.findById(user.parentId);
+  if (!parent) return;
+
+  const leftCount = await User.countDocuments({
+    parentId: parent._id,
+    position: "left",
+  });
+
+  const rightCount = await User.countDocuments({
+    parentId: parent._id,
+    position: "right",
+  });
+
+ const matchedPairs = Math.min(leftCount, rightCount);
+
+const newPairs = matchedPairs - (parent.binaryPairsPaid || 0);
+
+if (newPairs <= 0) return;
+
+const bonus = newPairs * amount * 0.05;
+
+parent.binaryPairsPaid = (parent.binaryPairsPaid || 0) + newPairs;
+await parent.save();
+
+  await ReferralEarning.create({
+    userId: parent._id,
+    referredUserId: userId,
+    evId,
+    type: constants.Earning_Type.TREE_REFERRAL,
+    totalAmount: bonus,
+    period: new Date().toISOString().slice(0, 7),
+  });
+}
+static async createLifetimeIncome(userId, evId, profit) {
+  const user = await User.findById(userId);
+  if (!user.referredBy) return;
+
+  const referrer = await User.findById(user.referredBy);
+  if (!referrer) return;
+
+  const bonus = profit * 0.05;
+
+  await ReferralEarning.create({
+    userId: referrer._id,
+    referredUserId: userId,
+    evId,
+    type: constants.Earning_Type.EV_INCOME_SHARE,
+    totalAmount: bonus,
+    period: new Date().toISOString().slice(0, 7),
+  });
+}
+
 }
 
 module.exports = { ReferralService };

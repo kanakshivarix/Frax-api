@@ -109,25 +109,41 @@ class AuthService {
     }
 
     let user = await userRepo.findByPhone(phone);
-    
     if (!user) {
-      let referredBy = null;
+  let referrer = null;
 
-      if (session.referralCode) {
-        const referrer = await userRepo.findByReferralCode(
-          session.referralCode,
-        );
-        if (referrer) referredBy = referrer._id;
-      }
+  if (session.referralCode) {
+    referrer = await userRepo.findByReferralCode(session.referralCode);
+  }
 
-      user = await userRepo.create({
-        phone,
-        isPhoneVerified: true,
-        referredBy,
-      });
 
-      await kycRepo.getOrCreate(user._id);
-    } else {
+  user = await userRepo.create({
+    phone,
+    isPhoneVerified: true,
+    referredBy: referrer ? referrer._id : null,
+  });
+
+if (referrer) {
+  if (!referrer.leftChild) {
+    referrer.leftChild = user._id;
+    user.position = "left";
+  } else if (!referrer.rightChild) {
+    referrer.rightChild = user._id;
+    user.position = "right";
+  } else {
+    console.log("Both left & right filled");
+    // future: spillover logic
+  }
+
+  user.parentId = referrer._id;
+
+  await referrer.save();
+  await user.save();
+}
+
+  await kycRepo.getOrCreate(user._id);
+}
+    else {
       await userRepo.updateById(user._id, { isPhoneVerified: true });
     }
 
@@ -311,6 +327,7 @@ class AuthService {
       phone,
       referredBy,
     });
+
 
     await kycRepo.getOrCreate(user._id);
 
