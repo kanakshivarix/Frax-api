@@ -78,7 +78,9 @@ class InvestmentRepository {
 
           user: {
             id: "$user._id",
-            fullname: "$user.fullname",
+            firstName: "$user.firstName",
+            lastName: "$user.lastName",
+
             phone: "$user.phone",
           },
 
@@ -99,7 +101,7 @@ class InvestmentRepository {
 
   static findAdminById(investmentId) {
     return Investment.findById(investmentId)
-      .populate("userId", "fullname email phone")
+      .populate("userId", "firstName lastName email phone")
       .populate({
         path: "outletId",
         select: {
@@ -189,13 +191,12 @@ class InvestmentRepository {
       })
       .lean();
   }
-  static updateInvoice(investmentId,invoiceData,session)
-  {
+  static updateInvoice(investmentId, invoiceData, session) {
     return Investment.updateOne(
-      {_id:investmentId},
-      {$set:{invoice:invoiceData}},
-      {session}
-    )
+      { _id: investmentId },
+      { $set: { invoice: invoiceData } },
+      { session },
+    );
   }
 }
 

@@ -6,8 +6,8 @@ const { constants } = require("../utils/constants/history.constant");
 const ApiError = require("../errors/ApiErrors");
 
 // Validation constants
-const VALID_MODULES = Object.values(constants.Modules);
-const VALID_ACTIONS = Object.values(constants.Actions);
+const VALID_MODULES = Object.values(constants?.Modules || {});
+const VALID_ACTIONS = Object.values(constants?.Actions || {});
 
 const hasPermission = async (userId, module, action) => {
   // Validate userId

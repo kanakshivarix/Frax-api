@@ -56,22 +56,7 @@ class ReferralService {
     logger.info(`Direct referral bonus of ₹${bonusAmount} created for referrer: ${referrer._id}`);
   }
 
-  static async updatePayoutSchedule(earningId, payoutSchedule) {
-    logger.info(`Updating payout schedule for earningId: ${earningId}`);
-    if (!["daily", "weekly", "monthly"].includes(payoutSchedule)) {
-      logger.error(`Invalid payout schedule: ${payoutSchedule}`);
-      throw new ApiError(400, "Invalid payout schedule");
-    }
-    const earning = await ReferralEarning.findById(earningId);
-    if (!earning) {
-      logger.error(`Earning not found for earningId: ${earningId}`);
-      throw new ApiError(404, "Earning not found");
-    }
-    earning.payoutSchedule = payoutSchedule;
-    await earning.save();
-    logger.info(`Payout schedule updated to ${payoutSchedule} for earningId: ${earningId}`);
-    return "Payout schedule updated";
-  }
+
 
   static async getUserIncome(userId, period) {
     logger.info(`Fetching income for user ${userId}, period ${period}`);
@@ -102,7 +87,9 @@ class ReferralService {
       (earn) => earn.type === constants.Earning_Type.EV_INCOME_SHARE,
     );
     const treeReferralEarnings = referralEarnings.filter(
-      (earn) => earn.type === constants.Earning_Type.TREE_REFERRAL,
+      (earn) =>
+        earn.type === constants.Earning_Type.TREE_REFERRAL ||
+        earn.type === constants.Earning_Type.BINARY_MATCHING_BONUS,
     );
 
     // Calculate totals for each referral type
@@ -209,7 +196,9 @@ class ReferralService {
       (earn) => earn.type === constants.Earning_Type.EV_INCOME_SHARE,
     );
     const treeReferralEarnings = referralEarnings.filter(
-      (earn) => earn.type === constants.Earning_Type.TREE_REFERRAL,
+      (earn) =>
+        earn.type === constants.Earning_Type.TREE_REFERRAL ||
+        earn.type === constants.Earning_Type.BINARY_MATCHING_BONUS,
     );
 
     // Calculate totals for each referral type
@@ -295,42 +284,56 @@ class ReferralService {
     }))
   }
   static async createBinaryIncome(userId, evId, amount) {
-  const user = await User.findById(userId);
-  if (!user.parentId) return;
+    const buyer = await User.findById(userId).select("parentId position");
+    if (!buyer || !buyer.parentId || !buyer.position) return;
 
-  const parent = await User.findById(user.parentId);
-  if (!parent) return;
+    const purchaseAmount = new Decimal(amount || 0);
+    if (purchaseAmount.lte(0)) return;
 
-  const leftCount = await User.countDocuments({
-    parentId: parent._id,
-    position: "left",
-  });
+    let currentUser = buyer;
 
-  const rightCount = await User.countDocuments({
-    parentId: parent._id,
-    position: "right",
-  });
+    // Propagate volume up the binary lineage and pay 5% on newly matched volume.
+    while (currentUser.parentId) {
+      const parent = await User.findById(currentUser.parentId);
+      if (!parent) break;
 
- const matchedPairs = Math.min(leftCount, rightCount);
+      if (currentUser.position === "left") {
+        parent.leftTeamVolume = new Decimal(parent.leftTeamVolume || 0)
+          .plus(purchaseAmount)
+          .toNumber();
+      } else if (currentUser.position === "right") {
+        parent.rightTeamVolume = new Decimal(parent.rightTeamVolume || 0)
+          .plus(purchaseAmount)
+          .toNumber();
+      }
 
-const newPairs = matchedPairs - (parent.binaryPairsPaid || 0);
+      const matchedVolume = Decimal.min(
+        new Decimal(parent.leftTeamVolume || 0),
+        new Decimal(parent.rightTeamVolume || 0)
+      );
+      const alreadyPaidMatched = new Decimal(parent.matchedVolumePaid || 0);
+      const newlyMatchedVolume = matchedVolume.minus(alreadyPaidMatched);
 
-if (newPairs <= 0) return;
+      if (newlyMatchedVolume.gt(0)) {
+        const bonus = newlyMatchedVolume.times(0.05).toFixed(2, Decimal.ROUND_HALF_UP);
+        parent.matchedVolumePaid = alreadyPaidMatched
+          .plus(newlyMatchedVolume)
+          .toNumber();
 
-const bonus = newPairs * amount * 0.05;
+        await ReferralEarning.create({
+          userId: parent._id,
+          referredUserId: userId,
+          evId,
+          type: constants.Earning_Type.BINARY_MATCHING_BONUS,
+          totalAmount: Number(bonus),
+          period: new Date().toISOString().slice(0, 7),
+        });
+      }
 
-parent.binaryPairsPaid = (parent.binaryPairsPaid || 0) + newPairs;
-await parent.save();
-
-  await ReferralEarning.create({
-    userId: parent._id,
-    referredUserId: userId,
-    evId,
-    type: constants.Earning_Type.TREE_REFERRAL,
-    totalAmount: bonus,
-    period: new Date().toISOString().slice(0, 7),
-  });
-}
+      await parent.save();
+      currentUser = parent;
+    }
+  }
 static async createLifetimeIncome(userId, evId, profit) {
   const user = await User.findById(userId);
   if (!user.referredBy) return;

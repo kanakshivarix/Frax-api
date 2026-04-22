@@ -98,73 +98,8 @@ class IncomeService {
       referralEarnings.length ? ReferralEarning.insertMany(referralEarnings) : Promise.resolve(),
     ]);
 
-    // Step 2: Calculate referral tree income
-    const treeReferralEarningsExist = await ReferralEarning.countDocuments({
-      period,
-      type: constants.Earning_Type.TREE_REFERRAL,
-    });
-
-    if (treeReferralEarningsExist > 0) {
-      logger.info(`Tree referral earnings already generated for period ${period}`);
-    } else {
-      const treeReferralEarnings = [];
-      const allUsers = await User.find({ isDisabled: false }).lean();
-
-      const referralMap = new Map();
-      for (const user of allUsers) {
-        if (user.referredBy) {
-          const referrerId = user.referredBy.toString();
-          if (!referralMap.has(referrerId)) {
-            referralMap.set(referrerId, []);
-          }
-          referralMap.get(referrerId).push(user._id.toString());
-        }
-      }
-
-      for (const user of allUsers) {
-        const userId = user._id.toString();
-        const referrals = referralMap.get(userId) || [];
-        if (!referrals.length) continue;
-
-        const referralIncomes = [];
-        for (const referralId of referrals) {
-          const income = await this.calculateUserTotalIncome(referralId, period);
-          referralIncomes.push({ referralId, income });
-        }
-
-        // “This user is not eligible for tree referral income → move on to the next user.”
-        // A user has no referred users, or
-        // Their referred users didn’t earn anything this period.
-        if (!referralIncomes.length || referralIncomes.every((ri) => ri.income === 0)) continue;
-
-        referralIncomes.sort((a, b) => b.income - a.income);
-        const highestIncome = referralIncomes[0].income;
-        const otherIncomesSum = referralIncomes.slice(1).reduce((sum, ri) => sum + ri.income, 0);
-
-        if (otherIncomesSum === 0) continue;
-
-        const valueForCalculation = Math.min(highestIncome, otherIncomesSum);
-        const additionalReferralIncome = new Decimal(valueForCalculation).times(0.05).toFixed(2);
-
-        treeReferralEarnings.push({
-          userId: user._id,
-          referredUserId: referralIncomes[0].referralId, //this is just it is required
-          evId: null,
-          type: constants.Earning_Type.TREE_REFERRAL,
-          totalAmount: Number(additionalReferralIncome),
-          period,
-          payoutSchedule: constants.Payout_Schedule.DAILY,
-        });
-      }
-
-      if (treeReferralEarnings.length) {
-        await ReferralEarning.insertMany(treeReferralEarnings);
-        referralEarnings.push(...treeReferralEarnings);
-      }
-    }
-
     logger.info(
-      `Distributed income for period ${period}: ${distributions.length} co-owner distributions, ${referralEarnings.length} referral earnings (including tree-based)`
+      `Distributed income for period ${period}: ${distributions.length} co-owner distributions, ${referralEarnings.length} referral earnings`
     );
     return {
       message: "Income distributed successfully",

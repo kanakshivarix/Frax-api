@@ -14,22 +14,13 @@ class ReferralController {
     logger.info(`Referral link generated for userId: ${userId}`);
     res.status(200).json(new ApiResponse(200, { referralLink }, "Referral link generated"));
   });
-  /**
-   * @Admin
-   */
-  static updatePayoutSchedule = asyncHandler(async (req, res) => {
-    const { earningId, payoutSchedule } = req.body;
-    logger.info(`Payout schedule update request for earningId: ${earningId}`);
-    const message = await ReferralService.updatePayoutSchedule(earningId, payoutSchedule);
-    logger.info(`Payout schedule updated for earningId: ${earningId}`);
-    res.status(200).json(new ApiResponse(200, {}, message));
-  });
+
   /**
    * @User
    */
   static getPeriodEarnings = asyncHandler(async (req, res) => {
     const { _id: userId } = req.user;
-    const { period } = req.body;
+    const { period } = req.query;
     logger.info(`Earnings overview request for userId: ${userId}`);
     const earnings = await ReferralService.getUserIncome(userId, period);
     logger.info(`Earnings overview fetched for userId: ${userId}`);

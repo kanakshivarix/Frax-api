@@ -1,6 +1,6 @@
 const express = require("express");
 const { constants } = require("../../utils/constants/history.constant");
-const validate = require("../../middlewares/validate.middleware");
+const {validate} = require("../../middlewares/validate.middleware");
 const validation = require("../../validator/ev.validator");
 const EVController = require("../../controllers/ev.controller");
 const { requirePermission } = require("../../middlewares/permission.middleware");

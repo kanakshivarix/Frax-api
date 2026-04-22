@@ -5,6 +5,7 @@ const constants = {
     DIRECT_BONUS: "direct_bonus",
     EV_INCOME_SHARE: "ev_income_share",
     TREE_REFERRAL: "tree_referral",
+    BINARY_MATCHING_BONUS: "binary_matching_bonus",
   },
   Earning_Status: {
     PENDING: "pending",

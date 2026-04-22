@@ -1,7 +1,7 @@
 const express = require("express");
 const { authMiddleware } = require("../../middlewares/auth.middleware");
 const ShareController = require("../../controllers/share.controller");
-const validate = require("../../middlewares/validate.middleware");
+const { validate } = require("../../middlewares/validate.middleware");
 const validation = require("../../validator/share.validator");
 
 const router = express.Router();

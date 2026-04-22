@@ -18,14 +18,4 @@ router.get("/my-income/:period", authMiddleware, async (req, res) => {
   res.json(new ApiResponse(200, result, "Income fetched successfully"));
 });
 
-router.post("/distribute-income", async (req, res, next) => {
-  try {
-    // You can also read period from req.body if needed
-    const result = await IncomeService.distributeIncome("2025-06");
-    res.status(200).json({ success: true, ...result });
-  } catch (error) {
-    next(error);
-  }
-});
-
 module.exports = router;
