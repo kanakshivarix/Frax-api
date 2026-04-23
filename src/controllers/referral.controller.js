@@ -19,7 +19,7 @@ class ReferralController {
    * @User
    */
   static getPeriodEarnings = asyncHandler(async (req, res) => {
-    const { _id: userId } = req.user;
+    const userId = req.user.userId;
     const { period } = req.query;
     logger.info(`Earnings overview request for userId: ${userId}`);
     const earnings = await ReferralService.getUserIncome(userId, period);
@@ -30,7 +30,7 @@ class ReferralController {
    * @User
    */
   static getTotalEarningsTillToday = asyncHandler(async (req, res) => {
-    const { _id: userId } = req.user;
+    const userId = req.user.userId;
     logger.info(`Earnings overview request for userId: ${userId}`);
     const earnings = await ReferralService.getUserTotalIncomeTillToday(userId);
     logger.info(`Earnings overview fetched for userId: ${userId}`);

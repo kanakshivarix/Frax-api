@@ -16,6 +16,7 @@ const constants = {
     WEEKLY: "weekly",
     MONTHLY: "monthly",
   },
+  
 };
 
 module.exports = { BASE_URL, constants };

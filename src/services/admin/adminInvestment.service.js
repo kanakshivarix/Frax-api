@@ -5,6 +5,7 @@ const ApiError = require("../../errors/ApiErrors");
 const { logger } = require("../../utils/helpers/logger.util");
 const s3Util = require("../../utils/helpers/aws.util");
 const userRepository = require("../../repositories/user.repository");
+const { ReferralService } = require("../referral.service");
 const {
   generateInvoicePDF,
   generateInvoicePDFBuffer,
@@ -33,6 +34,21 @@ class AdminInvestmentService {
         log.warn("Investment not approvable");
         throw new ApiError(400, "Investment not approvable");
       }
+
+      // Trigger referral earnings
+      
+      await ReferralService.createDirectReferralBonus({
+        userId: investment.userId,
+        shares: investment.shares,
+        sharePrice: investment.pricePerShare || 0,
+        outletId: investment.outletId,
+      });
+      await ReferralService.createBinaryIncome(
+        investment.userId,
+        investment.outletId,
+        investment.totalAmount
+      );
+
       const user = await userRepository.findById(investment.userId);
       const outlet = await CafeOutletRepo.findById(investment.outletId, session);
       const invoiceNumber = `INV-${Date.now()}`;

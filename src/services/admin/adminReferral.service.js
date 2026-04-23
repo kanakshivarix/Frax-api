@@ -45,7 +45,7 @@ class AdminReferralService {
       ReferralEarning.find(filter)
         .populate("userId", "firstName lastName email phone")
         .populate("referredUserId", "firstName lastName email phone")
-        .populate("evId", "model")
+        .populate("outletId", "outletName outletCode city")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(safeLimit)

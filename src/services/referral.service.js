@@ -21,7 +21,7 @@ class ReferralService {
   }
 
   //for every time user buy share
-  static async createDirectReferralBonus({ userId, shares, sharePrice, evId }) {
+  static async createDirectReferralBonus({ userId, shares, sharePrice, outletId }) {
     logger.info(`Creating direct referral bonus for userId: ${userId}`);
     const user = await User.findById(userId);
     if (!user || !user.referredBy) {
@@ -44,7 +44,7 @@ class ReferralService {
 
     const earning = new ReferralEarning({
       userId: referrer._id,
-      evId,
+      outletId,
       referredUserId: userId,
       type: constants.Earning_Type.DIRECT_BONUS,
       totalAmount: Number(bonusAmount),
@@ -61,7 +61,9 @@ class ReferralService {
   static async getUserIncome(userId, period) {
     logger.info(`Fetching income for user ${userId}, period ${period}`);
 
-    if (!/^\d{4}-\d{2}$/.test(period)) {
+    if (!period) {
+      period = new Date().toISOString().slice(0, 7);
+    } else if (!/^\d{4}-\d{2}$/.test(period)) {
       throw new ApiError(400, "Invalid period format (YYYY-MM)");
     }
 
@@ -72,7 +74,7 @@ class ReferralService {
 
     // Fetch referral earnings and populate referred user details
     const referralEarnings = await ReferralEarning.find({ userId, period })
-      .populate("evId", "model")
+      .populate("outletId", "outletName outletCode")
       .populate("referredUserId", "fullname")
       .lean();
 
@@ -129,8 +131,8 @@ class ReferralService {
       })),
       referralEarnings: {
         directBonus: directBonusEarnings.map((earn) => ({
-          evId: earn.evId ? earn.evId._id : null,
-          model: earn.evId ? earn.evId.model : null,
+          outletId: earn.outletId ? earn.outletId._id : null,
+          outletName: earn.outletId ? earn.outletId.outletName : null,
           amount: earn.totalAmount,
           type: earn.type,
           referredUserId: earn.referredUserId._id,
@@ -139,8 +141,8 @@ class ReferralService {
           createdAt: earn.createdAt,
         })),
         evIncomeShare: evIncomeShareEarnings.map((earn) => ({
-          evId: earn.evId ? earn.evId._id : null,
-          model: earn.evId ? earn.evId.model : null,
+          outletId: earn.outletId ? earn.outletId._id : null,
+          outletName: earn.outletId ? earn.outletId.outletName : null,
           amount: earn.totalAmount,
           type: earn.type,
           referredUserId: earn.referredUserId._id,
@@ -149,8 +151,8 @@ class ReferralService {
           createdAt: earn.createdAt,
         })),
         treeReferral: treeReferralEarnings.map((earn) => ({
-          evId: earn.evId ? earn.evId._id : null,
-          model: earn.evId ? earn.evId.model : null,
+          outletId: earn.outletId ? earn.outletId._id : null,
+          outletName: earn.outletId ? earn.outletId.outletName : null,
           amount: earn.totalAmount,
           type: earn.type,
           referredUserId: earn.referredUserId._id,
@@ -181,7 +183,7 @@ class ReferralService {
       userId,
       createdAt: { $lte: today },
     })
-      .populate("evId", "model")
+      .populate("outletId", "outletName outletCode")
       .populate("referredUserId", "fullname")
       .lean();
 
@@ -237,8 +239,8 @@ class ReferralService {
       })),
       referralEarnings: {
         directBonus: directBonusEarnings.map((earn) => ({
-          evId: earn.evId ? earn.evId._id : null,
-          model: earn.evId ? earn.evId.model : null,
+          outletId: earn.outletId ? earn.outletId._id : null,
+          outletName: earn.outletId ? earn.outletId.outletName : null,
           amount: earn.totalAmount,
           type: earn.type,
           referredUserId: earn.referredUserId._id,
@@ -247,8 +249,8 @@ class ReferralService {
           createdAt: earn.createdAt,
         })),
         evIncomeShare: evIncomeShareEarnings.map((earn) => ({
-          evId: earn.evId ? earn.evId._id : null,
-          model: earn.evId ? earn.evId.model : null,
+          outletId: earn.outletId ? earn.outletId._id : null,
+          outletName: earn.outletId ? earn.outletId.outletName : null,
           amount: earn.totalAmount,
           type: earn.type,
           referredUserId: earn.referredUserId._id,
@@ -257,8 +259,8 @@ class ReferralService {
           createdAt: earn.createdAt,
         })),
         treeReferral: treeReferralEarnings.map((earn) => ({
-          evId: earn.evId ? earn.evId._id : null,
-          model: earn.evId ? earn.evId.model : null,
+          outletId: earn.outletId ? earn.outletId._id : null,
+          outletName: earn.outletId ? earn.outletId.outletName : null,
           amount: earn.totalAmount,
           type: earn.type,
           referredUserId: earn.referredUserId._id,
@@ -274,16 +276,17 @@ class ReferralService {
   {
     logger.info(`Fetching referral history for userId :${userId}`);
     const referredUsers=await User.find({referredBy:userId})
-    .select("firstName lastName email createdAt")
+    .select("firstName lastName email phone createdAt")
     .lean();
     return referredUsers.map((user)=>({
       userId:user._id,
-      name:`${user.firstName || ""} ${user.lastName || ""}`,
+      name:`${user.firstName || ""} ${user.lastName || ""}`.trim() || user.phone,
       email:user.email,
+      phone:user.phone,
       joinedAt:user.createdAt,
     }))
   }
-  static async createBinaryIncome(userId, evId, amount) {
+  static async createBinaryIncome(userId, outletId, amount) {
     const buyer = await User.findById(userId).select("parentId position");
     if (!buyer || !buyer.parentId || !buyer.position) return;
 
@@ -323,7 +326,7 @@ class ReferralService {
         await ReferralEarning.create({
           userId: parent._id,
           referredUserId: userId,
-          evId,
+          outletId,
           type: constants.Earning_Type.BINARY_MATCHING_BONUS,
           totalAmount: Number(bonus),
           period: new Date().toISOString().slice(0, 7),
@@ -334,7 +337,7 @@ class ReferralService {
       currentUser = parent;
     }
   }
-static async createLifetimeIncome(userId, evId, profit) {
+static async createLifetimeIncome(userId, outletId, profit) {
   const user = await User.findById(userId);
   if (!user.referredBy) return;
 
@@ -346,7 +349,7 @@ static async createLifetimeIncome(userId, evId, profit) {
   await ReferralEarning.create({
     userId: referrer._id,
     referredUserId: userId,
-    evId,
+    outletId,
     type: constants.Earning_Type.EV_INCOME_SHARE,
     totalAmount: bonus,
     period: new Date().toISOString().slice(0, 7),

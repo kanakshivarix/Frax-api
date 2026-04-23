@@ -75,7 +75,7 @@ const requirePermission = (permissions) => {
 
   return async (req, res, next) => {
     try {
-      const { _id: userId } = req.user;
+      const userId = req.user.userId || req.user._id;
 
       for (const { module, action } of permissions) {
         const isAuthorized = await hasPermission(userId, module, action);
