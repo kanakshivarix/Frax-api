@@ -83,7 +83,7 @@ class IncomeService {
               userId: referrer._id,
               referredUserId: share.userId,
               evId: ev._id,
-              type: constants.Earning_Type.EV_INCOME_SHARE,
+              type: constants.Earning_Type.LIFETIME_PROFIT_SHARE,
               totalAmount: Number(referralIncome),
               period,
               payoutSchedule: constants.Payout_Schedule.DAILY,

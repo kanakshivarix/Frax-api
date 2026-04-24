@@ -64,7 +64,7 @@ class AdminKycService {
     const log = logger.child({ action: "adminListKycs" });
 
     page = Number.isInteger(+page) && +page > 0 ? +page : 1;
-    limit = Number.isInteger(+limit) && +limit > 0 ? +limit : 10;
+    limit = Number.isInteger(+limit) && +limit > 0 ? +limit : 100;
 
     const result = await kycRepo.list({
       page,

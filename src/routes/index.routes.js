@@ -40,11 +40,12 @@ router.use("/auth", authRoute);
 router.use("/user", userRoute);
 router.use("/kyc", userKycRoute);
 router.use("/cafe", cafeRoute);
+
 router.use("/investment", investmentRoute);
 
 // router.use("/ev", evRoute);
 router.use("/referral", referralRoute);
 // router.use("/share", shareRoute);
-// router.use("/income", userIncome);
+ //router.use("/income", userIncome);
 
 module.exports = router;

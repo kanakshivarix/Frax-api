@@ -166,7 +166,7 @@ class AdminInvestmentService {
     if (status) filter.status = status;
     if (outletId) filter.outletId = outletId;
     const safePage = Number.isInteger(page) && page > 0 ? page : 1;
-    const safeLimit = Number.isInteger(limit) && limit > 0 ? limit : 10;
+    const safeLimit = Number.isInteger(limit) && limit > 0 ? limit : 100;
     const skip = (safePage - 1) * safeLimit;
     const [items, total] = await Promise.all([
       InvestmentRepo.findAdminList(filter, skip, safeLimit),

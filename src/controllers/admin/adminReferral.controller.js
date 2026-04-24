@@ -24,6 +24,12 @@ class AdminReferralController {
     const message = await AdminReferralService.updatePayoutSchedule(earningId, payoutSchedule);
     return res.sendRes(200, {}, message);
   });
+
+  static distributeProfit = asyncHandler(async (req, res) => {
+    const { outletId, profit, period } = req.body;
+    const result = await AdminReferralService.distributeProfit(outletId, profit, period);
+    return res.sendRes(200, result, "Profit distributed and lifetime bonuses created successfully");
+  });
 }
 
 module.exports = AdminReferralController;

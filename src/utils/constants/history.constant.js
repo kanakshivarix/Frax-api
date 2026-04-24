@@ -3,7 +3,7 @@ const BASE_URL = "http://localhost:5173";
 const constants = {
   Earning_Type: {
     DIRECT_BONUS: "direct_bonus",
-    EV_INCOME_SHARE: "ev_income_share",
+    LIFETIME_PROFIT_SHARE: "lifetime_profit_share",
     TREE_REFERRAL: "tree_referral",
     BINARY_MATCHING_BONUS: "binary_matching_bonus",
   },

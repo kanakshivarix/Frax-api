@@ -7,7 +7,7 @@ router.get("/my-link", authMiddleware, ReferralController.getReferralLink);
 
 router.get("/my-earnings", authMiddleware, ReferralController.getPeriodEarnings);
 
-// router.get("/all-earnings", authMiddleware, ReferralController.getTotalEarningsTillToday);
+//router.get("/all-earnings", authMiddleware, ReferralController.getTotalEarningsTillToday);
 
 router.get('/my-network',authMiddleware,ReferralController.getReferralHistory)
 

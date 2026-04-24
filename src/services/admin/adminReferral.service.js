@@ -1,6 +1,9 @@
 const { ReferralEarning } = require("../../models/referralEarning.model");
 const { constants } = require("../../utils/constants/history.constant");
 const ApiError = require("../../errors/ApiErrors");
+const Investment = require("../../models/investment.model");
+const CafeOutlet = require("../../models/cafeOutlet.model");
+const { ReferralService } = require("../referral.service");
 
 class AdminReferralService {
   static async getOverview({ period }) {
@@ -9,15 +12,22 @@ class AdminReferralService {
 
     const earnings = await ReferralEarning.find(filter).lean();
 
-    const totalEarnings = earnings.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
+    const totalEarnings = earnings.reduce(
+      (sum, item) => sum + (item.totalAmount || 0),
+      0,
+    );
     const directBonus = earnings
       .filter((item) => item.type === constants.Earning_Type.DIRECT_BONUS)
       .reduce((sum, item) => sum + (item.totalAmount || 0), 0);
     const lifetimeProfitShare = earnings
-      .filter((item) => item.type === constants.Earning_Type.EV_INCOME_SHARE)
+      .filter(
+        (item) => item.type === constants.Earning_Type.LIFETIME_PROFIT_SHARE,
+      )
       .reduce((sum, item) => sum + (item.totalAmount || 0), 0);
     const binaryMatchingBonus = earnings
-      .filter((item) => item.type === constants.Earning_Type.BINARY_MATCHING_BONUS)
+      .filter(
+        (item) => item.type === constants.Earning_Type.BINARY_MATCHING_BONUS,
+      )
       .reduce((sum, item) => sum + (item.totalAmount || 0), 0);
 
     return {
@@ -38,7 +48,7 @@ class AdminReferralService {
     if (type) filter.type = type;
 
     const safePage = Number.isInteger(page) && page > 0 ? page : 1;
-    const safeLimit = Number.isInteger(limit) && limit > 0 ? limit : 20;
+    const safeLimit = Number.isInteger(limit) && limit > 0 ? limit : 100;
     const skip = (safePage - 1) * safeLimit;
 
     const [items, total] = await Promise.all([
@@ -75,6 +85,46 @@ class AdminReferralService {
     earning.payoutSchedule = payoutSchedule;
     await earning.save();
     return "Payout schedule updated";
+  }
+
+  static async distributeProfit(outletId, profit, period) {
+    const outlet = await CafeOutlet.findById(outletId);
+    if (!outlet) throw new ApiError(404, "Outlet not found");
+
+    const investments = await Investment.find({
+      outletId,
+      status: "ADMIN_APPROVED",
+    });
+    if (!investments.length) return "No investments found for this outlet";
+
+    const totalShares = outlet.totalShares;
+
+    // Group shares by user
+    const userShares = {};
+    for (const inv of investments) {
+      userShares[inv.userId] = (userShares[inv.userId] || 0) + inv.shares;
+    }
+
+    let bonusesCreated = 0;
+    for (const userId of Object.keys(userShares)) {
+      const shares = userShares[userId];
+      const shareFraction = shares / totalShares;
+      const userProfit = profit * shareFraction;
+
+      await ReferralService.createLifetimeIncome(
+        userId,
+        outletId,
+        userProfit,
+        period,
+      );
+      bonusesCreated++;
+    }
+
+    return {
+      message: `Generated ${bonusesCreated} lifetime bonuses`,
+      outlet: outlet.outletName,
+      profitDistributed: profit,
+    };
   }
 }
 

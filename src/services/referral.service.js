@@ -85,10 +85,10 @@ class ReferralService {
     const directBonusEarnings = referralEarnings.filter(
       (earn) => earn.type === constants.Earning_Type.DIRECT_BONUS,
     );
-    const evIncomeShareEarnings = referralEarnings.filter(
-      (earn) => earn.type === constants.Earning_Type.EV_INCOME_SHARE,
+    const lifetimeEarnings = referralEarnings.filter(
+      (earn) => earn.type === constants.Earning_Type.LIFETIME_PROFIT_SHARE,
     );
-    const treeReferralEarnings = referralEarnings.filter(
+    const binaryBonusEarnings = referralEarnings.filter(
       (earn) =>
         earn.type === constants.Earning_Type.TREE_REFERRAL ||
         earn.type === constants.Earning_Type.BINARY_MATCHING_BONUS,
@@ -96,17 +96,17 @@ class ReferralService {
 
     // Calculate totals for each referral type
     const directBonusIncome = directBonusEarnings.reduce((sum, earn) => sum + earn.totalAmount, 0);
-    const evIncomeShareIncome = evIncomeShareEarnings.reduce(
+    const lifetimeIncome = lifetimeEarnings.reduce(
       (sum, earn) => sum + earn.totalAmount,
       0,
     );
-    const treeReferralIncome = treeReferralEarnings.reduce(
+    const binaryBonusIncome = binaryBonusEarnings.reduce(
       (sum, earn) => sum + earn.totalAmount,
       0,
     );
 
     // Total referral income
-    const totalReferralIncome = directBonusIncome + evIncomeShareIncome + treeReferralIncome;
+    const totalReferralIncome = directBonusIncome + lifetimeIncome + binaryBonusIncome;
 
     // Total income
     const totalIncome = totalCoOwnerIncome + totalReferralIncome;
@@ -119,8 +119,8 @@ class ReferralService {
       totalReferralIncome,
       referralIncomeBreakdown: {
         directBonusIncome,
-        evIncomeShareIncome,
-        treeReferralIncome,
+        lifetimeIncome,
+        binaryBonusIncome,
       },
       coOwnerDistributions: coOwnerDistributions.map((dist) => ({
         evId: dist.evId._id,
@@ -129,38 +129,16 @@ class ReferralService {
         period: dist.period,
         createdAt: dist.createdAt,
       })),
-      referralEarnings: {
-        directBonus: directBonusEarnings.map((earn) => ({
-          outletId: earn.outletId ? earn.outletId._id : null,
-          outletName: earn.outletId ? earn.outletId.outletName : null,
-          amount: earn.totalAmount,
-          type: earn.type,
-          referredUserId: earn.referredUserId._id,
-          referredUserName: earn.referredUserId.fullname,
-          period: earn.period,
-          createdAt: earn.createdAt,
-        })),
-        evIncomeShare: evIncomeShareEarnings.map((earn) => ({
-          outletId: earn.outletId ? earn.outletId._id : null,
-          outletName: earn.outletId ? earn.outletId.outletName : null,
-          amount: earn.totalAmount,
-          type: earn.type,
-          referredUserId: earn.referredUserId._id,
-          referredUserName: earn.referredUserId.fullname,
-          period: earn.period,
-          createdAt: earn.createdAt,
-        })),
-        treeReferral: treeReferralEarnings.map((earn) => ({
-          outletId: earn.outletId ? earn.outletId._id : null,
-          outletName: earn.outletId ? earn.outletId.outletName : null,
-          amount: earn.totalAmount,
-          type: earn.type,
-          referredUserId: earn.referredUserId._id,
-          referredUserName: earn.referredUserId.fullname,
-          period: earn.period,
-          createdAt: earn.createdAt,
-        })),
-      },
+      referralEarnings: referralEarnings.map((earn) => ({
+        outletId: earn.outletId ? earn.outletId._id : null,
+        outletName: earn.outletId ? earn.outletId.outletName : null,
+        amount: earn.totalAmount,
+        type: earn.type,
+        referredUserId: earn.referredUserId ? earn.referredUserId._id : null,
+        referredUserName: earn.referredUserId ? earn.referredUserId.fullname : null,
+        period: earn.period,
+        createdAt: earn.createdAt,
+      })).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
     };
   }
 
@@ -194,10 +172,10 @@ class ReferralService {
     const directBonusEarnings = referralEarnings.filter(
       (earn) => earn.type === constants.Earning_Type.DIRECT_BONUS,
     );
-    const evIncomeShareEarnings = referralEarnings.filter(
-      (earn) => earn.type === constants.Earning_Type.EV_INCOME_SHARE,
+    const lifetimeEarnings = referralEarnings.filter(
+      (earn) => earn.type === constants.Earning_Type.LIFETIME_PROFIT_SHARE,
     );
-    const treeReferralEarnings = referralEarnings.filter(
+    const binaryBonusEarnings = referralEarnings.filter(
       (earn) =>
         earn.type === constants.Earning_Type.TREE_REFERRAL ||
         earn.type === constants.Earning_Type.BINARY_MATCHING_BONUS,
@@ -205,17 +183,17 @@ class ReferralService {
 
     // Calculate totals for each referral type
     const directBonusIncome = directBonusEarnings.reduce((sum, earn) => sum + earn.totalAmount, 0);
-    const evIncomeShareIncome = evIncomeShareEarnings.reduce(
+    const lifetimeIncome = lifetimeEarnings.reduce(
       (sum, earn) => sum + earn.totalAmount,
       0,
     );
-    const treeReferralIncome = treeReferralEarnings.reduce(
+    const binaryBonusIncome = binaryBonusEarnings.reduce(
       (sum, earn) => sum + earn.totalAmount,
       0,
     );
 
     // Total referral income
-    const totalReferralIncome = directBonusIncome + evIncomeShareIncome + treeReferralIncome;
+    const totalReferralIncome = directBonusIncome + lifetimeIncome + binaryBonusIncome;
 
     // Total income
     const totalIncome = totalCoOwnerIncome + totalReferralIncome;
@@ -227,8 +205,8 @@ class ReferralService {
       totalReferralIncome,
       referralIncomeBreakdown: {
         directBonusIncome,
-        evIncomeShareIncome,
-        treeReferralIncome,
+        lifetimeIncome,
+        binaryBonusIncome,
       },
       coOwnerDistributions: coOwnerDistributions.map((dist) => ({
         evId: dist.evId._id,
@@ -237,38 +215,16 @@ class ReferralService {
         period: dist.period,
         createdAt: dist.createdAt,
       })),
-      referralEarnings: {
-        directBonus: directBonusEarnings.map((earn) => ({
-          outletId: earn.outletId ? earn.outletId._id : null,
-          outletName: earn.outletId ? earn.outletId.outletName : null,
-          amount: earn.totalAmount,
-          type: earn.type,
-          referredUserId: earn.referredUserId._id,
-          referredUserName: earn.referredUserId.fullname,
-          period: earn.period,
-          createdAt: earn.createdAt,
-        })),
-        evIncomeShare: evIncomeShareEarnings.map((earn) => ({
-          outletId: earn.outletId ? earn.outletId._id : null,
-          outletName: earn.outletId ? earn.outletId.outletName : null,
-          amount: earn.totalAmount,
-          type: earn.type,
-          referredUserId: earn.referredUserId._id,
-          referredUserName: earn.referredUserId.fullname,
-          period: earn.period,
-          createdAt: earn.createdAt,
-        })),
-        treeReferral: treeReferralEarnings.map((earn) => ({
-          outletId: earn.outletId ? earn.outletId._id : null,
-          outletName: earn.outletId ? earn.outletId.outletName : null,
-          amount: earn.totalAmount,
-          type: earn.type,
-          referredUserId: earn.referredUserId._id,
-          referredUserName: earn.referredUserId.fullname,
-          period: earn.period,
-          createdAt: earn.createdAt,
-        })),
-      },
+      referralEarnings: referralEarnings.map((earn) => ({
+        outletId: earn.outletId ? earn.outletId._id : null,
+        outletName: earn.outletId ? earn.outletId.outletName : null,
+        amount: earn.totalAmount,
+        type: earn.type,
+        referredUserId: earn.referredUserId ? earn.referredUserId._id : null,
+        referredUserName: earn.referredUserId ? earn.referredUserId.fullname : null,
+        period: earn.period,
+        createdAt: earn.createdAt,
+      })).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
     };
   }
 
@@ -337,24 +293,24 @@ class ReferralService {
       currentUser = parent;
     }
   }
-static async createLifetimeIncome(userId, outletId, profit) {
-  const user = await User.findById(userId);
-  if (!user.referredBy) return;
+  static async createLifetimeIncome(userId, outletId, profit, period) {
+    const user = await User.findById(userId);
+    if (!user || !user.referredBy) return;
 
-  const referrer = await User.findById(user.referredBy);
-  if (!referrer) return;
+    const referrer = await User.findById(user.referredBy);
+    if (!referrer) return;
 
-  const bonus = profit * 0.05;
+    const bonus = profit * 0.05;
 
-  await ReferralEarning.create({
-    userId: referrer._id,
-    referredUserId: userId,
-    outletId,
-    type: constants.Earning_Type.EV_INCOME_SHARE,
-    totalAmount: bonus,
-    period: new Date().toISOString().slice(0, 7),
-  });
-}
+    await ReferralEarning.create({
+      userId: referrer._id,
+      referredUserId: userId,
+      outletId,
+      type: constants.Earning_Type.LIFETIME_PROFIT_SHARE,
+      totalAmount: bonus,
+      period: period || new Date().toISOString().slice(0, 7),
+    });
+  }
 
 }
 
