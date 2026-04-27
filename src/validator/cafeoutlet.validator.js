@@ -42,7 +42,7 @@ module.exports = {
 
       areaType: z.enum(AREA_TYPES),
 
-      fullAddress: z.string().trim().min(10),
+      fullAddress: z.string().trim().min(3),
 
       // Financials (immutable later)
       totalSetupCost: z.number().positive(),
@@ -118,16 +118,29 @@ module.exports = {
     }),
   }),
   updateCafeOutlet: z.object({
-  pincode: z.string().optional(),
-  fullAddress: z.string().optional(),
-
-  projectedROI: z.number().optional(),
-  carpetAreaSqFt: z.number().optional(),
-  seatingCapacity: z.number().optional(),
-
-  description: z.string().optional(),
-  highlights: z.array(z.string()).optional(),
-  
-}).strict(),
+    outletName: z.string().trim().min(2).max(100).optional(),
+    city: z.string().trim().min(2).optional(),
+    state: z.string().trim().min(2).optional(),
+    areaType: z.enum(AREA_TYPES).optional(),
+    pincode: z.string().trim().regex(/^[0-9]{6}$/, "Invalid pincode").optional(),
+    fullAddress: z.string().trim().min(3).optional(),
+    minInvestmentShares: z.number().int().min(1).optional(),
+    maxInvestmentSharesPerUser: z.number().int().min(1).optional(),
+    expectedMonthlyProfit: z.number().min(0).optional(),
+    projectedROI: z.number().min(0).max(100).optional(),
+    carpetAreaSqFt: z.number().min(100).optional(),
+    seatingCapacity: z.number().min(10).optional(),
+    parkingAvailability: z.boolean().optional(),
+    shortDescription: z.string().trim().max(300).optional(),
+    description: z.string().trim().optional(),
+    highlights: z.array(z.string().trim().max(100)).optional(),
+    estimatedLaunchDate: z.coerce.date().optional(),
+    actualLaunchDate: z.coerce.date().optional(),
+    spvCompanyName: z.string().optional(),
+    spvCIN: z.string().optional(),
+    spvIncorporationDate: z.coerce.date().optional(),
+    spvStatus: z.enum(["NOT_STARTED", "IN_PROCESS", "REGISTERED", "FAILED"]).optional(),
+    status: z.enum(CAFE_STATUSES).optional()
+  }).strict(),
  getById :z.object({cafeId: z.string().min(1)}),
 };

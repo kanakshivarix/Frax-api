@@ -142,6 +142,56 @@ class CafeOutletImageService {
 
     return updated;
   }
+
+  static async deleteGalleryImage({ cafeOutletId, imageId, adminId }) {
+    const log = logger.child({
+      action: "cafe:deleteGalleryImage",
+      cafeOutletId,
+      imageId,
+      adminId,
+    });
+
+    const cafe = await CafeOutletRepository.findById(cafeOutletId);
+    if (!cafe) throw new ApiError(404, "Cafe outlet not found");
+
+    const image = cafe.images.id(imageId);
+    if (!image) throw new ApiError(404, "Image not found");
+
+    if (image.key) {
+      await deleteFromS3(image.key);
+    }
+
+    cafe.images.pull(imageId);
+    await cafe.save();
+
+    log.info("Gallery image deleted");
+    return cafe;
+  }
+
+  static async deleteMenuImage({ cafeOutletId, imageId, adminId }) {
+    const log = logger.child({
+      action: "cafe:deleteMenuImage",
+      cafeOutletId,
+      imageId,
+      adminId,
+    });
+
+    const cafe = await CafeOutletRepository.findById(cafeOutletId);
+    if (!cafe) throw new ApiError(404, "Cafe outlet not found");
+
+    const image = cafe.menuImages.id(imageId);
+    if (!image) throw new ApiError(404, "Image not found");
+
+    if (image.key) {
+      await deleteFromS3(image.key);
+    }
+
+    cafe.menuImages.pull(imageId);
+    await cafe.save();
+
+    log.info("Menu image deleted");
+    return cafe;
+  }
 }
 
 module.exports = CafeOutletImageService;

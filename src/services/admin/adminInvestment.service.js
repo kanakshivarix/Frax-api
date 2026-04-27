@@ -150,6 +150,19 @@ class AdminInvestmentService {
           shares: investment.shares,
         });
       }
+      const user=await userRepository.findById(investment.userId);
+      const outlet=await CafeOutletRepo.findById(investment.outletId,session);
+      await mailProvider.send({
+        to:user.email,
+        subject:"Update on Your Investment Request",
+        template:"investment_rejected",
+        context:{
+          user,
+          outlet,
+          investment,
+          reason,
+        }
+      })
       await session.commitTransaction();
       log.info("Investment rejected");
       return { success: true };

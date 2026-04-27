@@ -151,13 +151,29 @@ class CafeOutletService {
     if (!cafe) throw new ApiError(404, "Cafe not found");
 
     const allowedFields = [
+      "outletName",
+      "city",
+      "state",
+      "areaType",
       "pincode",
       "fullAddress",
+      "minInvestmentShares",
+      "maxInvestmentSharesPerUser",
+      "expectedMonthlyProfit",
       "projectedROI",
       "carpetAreaSqFt",
       "seatingCapacity",
+      "parkingAvailability",
+      "shortDescription",
       "description",
       "highlights",
+      "estimatedLaunchDate",
+      "actualLaunchDate",
+      "spvCompanyName",
+      "spvCIN",
+      "spvIncorporationDate",
+      "spvStatus",
+      "status"
     ];
 
     const filteredData = {};
@@ -176,6 +192,42 @@ class CafeOutletService {
       throw new ApiError(404, "Cafe not found");
     }
     return cafe;
+  }
+
+  static async deleteCafe(cafeId) {
+    const cafe = await CafeOutletRepository.findById(cafeId);
+    if (!cafe) {
+      throw new ApiError(404, "Cafe not found");
+    }
+
+    const { deleteFromS3 } = require("../utils/helpers/aws.util");
+
+    // Delete cover image
+    if (cafe.coverImage?.key) {
+      await deleteFromS3(cafe.coverImage.key).catch((e) => logger.warn("Failed to delete cover image", e));
+    }
+
+    // Delete brochure
+    if (cafe.brochure?.key) {
+      await deleteFromS3(cafe.brochure.key).catch((e) => logger.warn("Failed to delete brochure", e));
+    }
+
+    // Delete gallery images
+    if (cafe.images && cafe.images.length > 0) {
+      for (const img of cafe.images) {
+        if (img.key) await deleteFromS3(img.key).catch((e) => logger.warn("Failed to delete gallery image", e));
+      }
+    }
+
+    // Delete menu images
+    if (cafe.menuImages && cafe.menuImages.length > 0) {
+      for (const img of cafe.menuImages) {
+        if (img.key) await deleteFromS3(img.key).catch((e) => logger.warn("Failed to delete menu image", e));
+      }
+    }
+
+    await CafeOutletRepository.deleteById(cafeId);
+    return true;
   }
 }
 

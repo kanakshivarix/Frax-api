@@ -48,6 +48,14 @@ class AdminCafeOutletController {
 
     return res.sendRes(200, cafe, "Cafe fetched successfully");
   });
+
+  static delete = asyncHandler(async (req, res) => {
+    const { cafeId } = req.params;
+
+    await CafeOutletService.deleteCafe(cafeId);
+
+    return res.sendRes(200, null, "Cafe and associated files deleted successfully");
+  });
 }
 
 module.exports = AdminCafeOutletController;

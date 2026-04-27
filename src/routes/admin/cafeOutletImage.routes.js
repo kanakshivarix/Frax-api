@@ -43,4 +43,18 @@ router.post(
   CafeOutletImageController.setBrochure,
 );
 
+router.delete(
+  "/:cafeOutletId/images/:imageId",
+  authMiddleware,
+  allowed(User_Type.SUPER_ADMIN),
+  CafeOutletImageController.deleteGalleryImage,
+);
+
+router.delete(
+  "/:cafeOutletId/menu-images/:imageId",
+  authMiddleware,
+  allowed(User_Type.SUPER_ADMIN),
+  CafeOutletImageController.deleteMenuImage,
+);
+
 module.exports = router;

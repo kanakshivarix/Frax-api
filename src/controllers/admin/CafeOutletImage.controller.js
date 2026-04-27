@@ -56,6 +56,24 @@ class CafeOutletImageController {
 
     return res.sendRes(200, data, "Brochure uploaded");
   });
+
+  static deleteGalleryImage = asyncHandler(async (req, res) => {
+    const data = await CafeOutletImageService.deleteGalleryImage({
+      cafeOutletId: req.params.cafeOutletId,
+      imageId: req.params.imageId,
+      adminId: req.user.userId,
+    });
+    return res.sendRes(200, data, "Gallery image deleted");
+  });
+
+  static deleteMenuImage = asyncHandler(async (req, res) => {
+    const data = await CafeOutletImageService.deleteMenuImage({
+      cafeOutletId: req.params.cafeOutletId,
+      imageId: req.params.imageId,
+      adminId: req.user.userId,
+    });
+    return res.sendRes(200, data, "Menu image deleted");
+  });
 }
 
 module.exports = CafeOutletImageController;

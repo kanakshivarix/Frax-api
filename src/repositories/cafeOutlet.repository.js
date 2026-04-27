@@ -252,7 +252,10 @@ class CafeOutletRepository {
   static async updateById(cafeId, updateObj) {
     return CafeOutlet.findByIdAndUpdate(cafeId, updateObj, { new: true });
   }
-  
+
+  static async deleteById(cafeId) {
+    return CafeOutlet.findByIdAndDelete(cafeId);
+  }
 }
 
 module.exports = CafeOutletRepository;
