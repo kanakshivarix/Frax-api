@@ -18,13 +18,9 @@ module.exports = {
         .trim()
         .min(6, "UTR must be at least 6 characters"),
 
-      paidAt: z
-        .string({
-          required_error: "Payment date is required",
-        })
-        .datetime("paidAt must be a valid ISO datetime"),
-    })
-    .strict(),
+      paidAt: z.coerce.date().optional().default(new Date()),
+     })
+  .strict(), 
 
   approveInvestment: z
     .object({
@@ -43,7 +39,7 @@ module.exports = {
       reason: z
         .string({ required_error: "Rejection reason is required" })
         .trim()
-        .min(10, "Rejection reason must be at least 10 characters"),
+        .min(1, "Rejection reason must be at least 1 characters"),
     })
     .strict(),
   //Admin

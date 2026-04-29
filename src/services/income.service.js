@@ -74,22 +74,23 @@ class IncomeService {
           period,
         });
 
-        const user = await User.findById(share.userId).select("referredBy");
-        if (user && user.referredBy) {
-          const referrer = await User.findById(user.referredBy);
-          if (referrer) {
-            const referralIncome = new Decimal(coOwnerIncome).times(0.05).toFixed(2);
-            referralEarnings.push({
-              userId: referrer._id,
-              referredUserId: share.userId,
-              evId: ev._id,
-              type: constants.Earning_Type.LIFETIME_PROFIT_SHARE,
-              totalAmount: Number(referralIncome),
-              period,
-              payoutSchedule: constants.Payout_Schedule.DAILY,
-            });
-          }
-        }
+        // Lifetime bonus commented out as per request
+        // const user = await User.findById(share.userId).select("referredBy");
+        // if (user && user.referredBy) {
+        //   const referrer = await User.findById(user.referredBy);
+        //   if (referrer) {
+        //     const referralIncome = new Decimal(coOwnerIncome).times(0.05).toFixed(2);
+        //     referralEarnings.push({
+        //       userId: referrer._id,
+        //       referredUserId: share.userId,
+        //       evId: ev._id,
+        //       type: constants.Earning_Type.LIFETIME_PROFIT_SHARE,
+        //       totalAmount: Number(referralIncome),
+        //       period,
+        //       payoutSchedule: constants.Payout_Schedule.DAILY,
+        //     });
+        //   }
+        // }
       }
     }
 

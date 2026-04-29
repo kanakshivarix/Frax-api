@@ -2,9 +2,7 @@ const jwt = require("jsonwebtoken");
 const jwtConfig = require("../configs/jwt.config");
 const { logger } = require("./helpers/logger.util");
 
-/**
- * ACCESS TOKEN
- */
+
 const generateAccessToken = (user) => {
   return jwt.sign(
     {

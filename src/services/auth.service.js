@@ -123,23 +123,23 @@ class AuthService {
     referredBy: referrer ? referrer._id : null,
   });
 
-if (referrer) {
-  if (!referrer.leftChild) {
-    referrer.leftChild = user._id;
-    user.position = "left";
-  } else if (!referrer.rightChild) {
-    referrer.rightChild = user._id;
-    user.position = "right";
-  } else {
-    console.log("Both left & right filled");
-    // future: spillover logic
-  }
+// if (referrer) {
+//   if (!referrer.leftChild) {
+//     referrer.leftChild = user._id;
+//     user.position = "left";
+//   } else if (!referrer.rightChild) {
+//     referrer.rightChild = user._id;
+//     user.position = "right";
+//   } else {
+//     console.log("Both left & right filled");
+//     // future: spillover logic
+//   }
 
-  user.parentId = referrer._id;
+//   user.parentId = referrer._id;
 
-  await referrer.save();
-  await user.save();
-}
+//   await referrer.save();
+//   await user.save();
+// }
 
   await kycRepo.getOrCreate(user._id);
 }
@@ -254,8 +254,10 @@ if (referrer) {
     if (!refreshToken) {
       throw new ApiError(400, "Refresh token required");
     }
+    
 
     const user = await userRepo.findByRefreshToken(refreshToken);
+    
     if (!user) {
       log.error("Invalid refresh token");
       throw new ApiError(401, "Invalid refresh token");

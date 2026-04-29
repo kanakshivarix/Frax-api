@@ -3,79 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <title>Investment Rejected</title>
-  <style>
-    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; }
-    .container { max-width: 600px; margin: auto; border: 1px solid #eee; padding: 30px; border-radius: 10px; }
-    .header { text-align: center; margin-bottom: 30px; }
-    .header h2 { margin: 0; color: #e74c3c; font-size: 24px; }
-    .content { margin-bottom: 25px; }
-    .status-badge { 
-        display: inline-block; 
-        padding: 5px 15px; 
-        background-color: #fdeaea; 
-        color: #e74c3c; 
-        border-radius: 5px; 
-        font-weight: bold; 
-        font-size: 14px; 
-        margin-bottom: 15px;
-    }
-    .reason-box { 
-        background-color: #f9f9f9; 
-        border-left: 4px solid #e74c3c; 
-        padding: 15px; 
-        margin: 20px 0; 
-        font-style: italic;
-    }
-    .details { font-size: 14px; color: #555; }
-    .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 20px; }
-    .button {
-        display: inline-block;
-        padding: 10px 20px;
-        background-color: #2c3e50;
-        color: #ffffff;
-        text-decoration: none;
-        border-radius: 5px;
-        margin-top: 20px;
-    }
-  </style>
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h2>Investment Update</h2>
-      <p>Reference #<%= investment.investmentRef %></p>
+<body style="font-family: Arial, sans-serif; background-color: #f6f6f6; padding: 20px;">
+
+  <div style="max-width: 500px; margin: auto; background: #ffffff; padding: 20px; border-radius: 8px;">
+
+    <h2 style="color: #e74c3c; text-align: center;">Investment Rejected</h2>
+
+    <p>Hi <%= user.firstName %>,</p>
+
+    <p>
+      Your investment request for <strong><%= outlet.outletName %></strong> has been rejected.
+    </p>
+
+    <p><strong>Reason:</strong></p>
+    <p style="background: #f2f2f2; padding: 10px; border-radius: 5px;">
+      <%= reason %>
+    </p>
+
+    <p><strong>Details:</strong></p>
+    <ul>
+      <li>Shares: <%= investment.shares %></li>
+      <li>Amount: ₹<%= investment.totalAmount %></li>
+    </ul>
+
+    <p>
+      You can create a new investment request from your dashboard.
+    </p>
+
+    <div style="text-align: center;">
+      <a href="<%= process.env.FRONTEND_URL %>/dashboard"
+         style="display: inline-block; padding: 10px 20px; background: #333; color: #fff; text-decoration: none; border-radius: 5px;">
+        Go to Dashboard
+      </a>
     </div>
 
-    <div class="content">
-      <p>Dear <%= user.firstName %>,</p>
-      
-      <p>We regret to inform you that your investment request for <strong><%= outlet.outletName %></strong> has been <strong>Rejected</strong> by the administration team.</p>
-      
-      <div class="status-badge">REJECTED</div>
+    <hr style="margin: 20px 0;" />
 
-      <div class="reason-box">
-        <strong>Reason for Rejection:</strong><br>
-        <%= reason %>
-      </div>
+    <p style="font-size: 12px; color: #777; text-align: center;">
+      If you have any questions, contact support.
+    </p>
 
-      <div class="details">
-        <p><strong>Investment Details:</strong></p>
-        <ul>
-          <li>Outlet: <%= outlet.outletName %></li>
-          <li>Shares: <%= investment.shares %></li>
-          <li>Total Amount: Rs. <%= investment.totalAmount %></li>
-        </ul>
-      </div>
-
-      <p>If this was due to an incorrect payment screenshot or UTR number, you can initiate a new investment request from your dashboard.</p>
-      
-      <a href="<%= process.env.FRONTEND_URL %>/dashboard" class="button">Go to Dashboard</a>
-    </div>
-
-    <div class="footer">
-      <p>If you have any questions regarding this rejection, please contact our support team.</p>
-      <p>&copy; <%= new Date().getFullYear() %> Your Company Name. All rights reserved.</p>
-    </div>
   </div>
+
 </body>
 </html>

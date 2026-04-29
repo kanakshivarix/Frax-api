@@ -30,11 +30,11 @@ router.post(
   AdminReferralController.updatePayoutSchedule,
 );
 
-router.post(
-  "/distribute-profit",
-  authMiddleware,
-  allowed(User_Type.SUPER_ADMIN),
-  AdminReferralController.distributeProfit,
-);
+// router.post(
+//   "/distribute-profit",
+//   authMiddleware,
+//   allowed(User_Type.SUPER_ADMIN),
+//   AdminReferralController.distributeProfit,
+// );
 
 module.exports = router;

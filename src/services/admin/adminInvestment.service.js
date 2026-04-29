@@ -43,11 +43,11 @@ class AdminInvestmentService {
         sharePrice: investment.pricePerShare || 0,
         outletId: investment.outletId,
       });
-      await ReferralService.createBinaryIncome(
-        investment.userId,
-        investment.outletId,
-        investment.totalAmount
-      );
+      // await ReferralService.createBinaryIncome(
+      //   investment.userId,
+      //   investment.outletId,
+      //   investment.totalAmount
+      // );
 
       const user = await userRepository.findById(investment.userId);
       const outlet = await CafeOutletRepo.findById(investment.outletId, session);
@@ -123,11 +123,11 @@ class AdminInvestmentService {
       investmentId,
       adminId,
     });
-    if (!reason || reason.trim().length < 10) {
+    if (!reason || reason.trim().length < 1) {
       log.warn("Invalid rejection reason");
       throw new ApiError(
         400,
-        "Rejection reason must be at least 10 characters",
+        "Rejection reason must be at least 1 characters",
       );
     }
     const session = await mongoose.startSession();

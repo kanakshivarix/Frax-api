@@ -6,6 +6,7 @@ const { User } = require("../models/user.model");
 const moment = require("moment-timezone");
 const { default: Decimal } = require("decimal.js");
 const { IncomeDistribution } = require("../models/incomeDistribution.model");
+const InvestmentRepo =require("../repositories/investment.repository")
 
 class ReferralService {
   static async getReferralLink(userId) {
@@ -34,6 +35,15 @@ class ReferralService {
       logger.error(`Referrer not found for userId: ${user.referredBy}`);
       return;
     }
+    const referrerInvestment=await InvestmentRepo.count({
+      userId:referrer._id,
+      status:"ADMIN_APPROVED",
+    })
+    if(referrerInvestment===0)
+    {
+      logger.info(`Referrer ${referrer._id} has no investment. Bonus skipped`);
+      return;
+    }
 
     const bonusAmount = new Decimal(shares)
       .times(sharePrice)
@@ -54,6 +64,8 @@ class ReferralService {
     await earning.save();
 
     logger.info(`Direct referral bonus of ₹${bonusAmount} created for referrer: ${referrer._id}`);
+
+    // Level 2 bonus removed as per user request
   }
 
 
@@ -85,28 +97,28 @@ class ReferralService {
     const directBonusEarnings = referralEarnings.filter(
       (earn) => earn.type === constants.Earning_Type.DIRECT_BONUS,
     );
-    const lifetimeEarnings = referralEarnings.filter(
-      (earn) => earn.type === constants.Earning_Type.LIFETIME_PROFIT_SHARE,
-    );
-    const binaryBonusEarnings = referralEarnings.filter(
-      (earn) =>
-        earn.type === constants.Earning_Type.TREE_REFERRAL ||
-        earn.type === constants.Earning_Type.BINARY_MATCHING_BONUS,
-    );
+    // const lifetimeEarnings = referralEarnings.filter(
+    //   (earn) => earn.type === constants.Earning_Type.LIFETIME_PROFIT_SHARE,
+    // );
+    // const binaryBonusEarnings = referralEarnings.filter(
+    //   (earn) =>
+    //     earn.type === constants.Earning_Type.TREE_REFERRAL ||
+    //     earn.type === constants.Earning_Type.BINARY_MATCHING_BONUS,
+    // );
 
     // Calculate totals for each referral type
     const directBonusIncome = directBonusEarnings.reduce((sum, earn) => sum + earn.totalAmount, 0);
-    const lifetimeIncome = lifetimeEarnings.reduce(
-      (sum, earn) => sum + earn.totalAmount,
-      0,
-    );
-    const binaryBonusIncome = binaryBonusEarnings.reduce(
-      (sum, earn) => sum + earn.totalAmount,
-      0,
-    );
+    // const lifetimeIncome = lifetimeEarnings.reduce(
+    //   (sum, earn) => sum + earn.totalAmount,
+    //   0,
+    // );
+    // const binaryBonusIncome = binaryBonusEarnings.reduce(
+    //   (sum, earn) => sum + earn.totalAmount,
+    //   0,
+    // );
 
     // Total referral income
-    const totalReferralIncome = directBonusIncome + lifetimeIncome + binaryBonusIncome;
+    const totalReferralIncome = directBonusIncome; // + lifetimeIncome + binaryBonusIncome;
 
     // Total income
     const totalIncome = totalCoOwnerIncome + totalReferralIncome;
@@ -119,8 +131,8 @@ class ReferralService {
       totalReferralIncome,
       referralIncomeBreakdown: {
         directBonusIncome,
-        lifetimeIncome,
-        binaryBonusIncome,
+        // lifetimeIncome,
+        // binaryBonusIncome,
       },
       coOwnerDistributions: coOwnerDistributions.map((dist) => ({
         evId: dist.evId._id,
@@ -172,28 +184,28 @@ class ReferralService {
     const directBonusEarnings = referralEarnings.filter(
       (earn) => earn.type === constants.Earning_Type.DIRECT_BONUS,
     );
-    const lifetimeEarnings = referralEarnings.filter(
-      (earn) => earn.type === constants.Earning_Type.LIFETIME_PROFIT_SHARE,
-    );
-    const binaryBonusEarnings = referralEarnings.filter(
-      (earn) =>
-        earn.type === constants.Earning_Type.TREE_REFERRAL ||
-        earn.type === constants.Earning_Type.BINARY_MATCHING_BONUS,
-    );
+    // const lifetimeEarnings = referralEarnings.filter(
+    //   (earn) => earn.type === constants.Earning_Type.LIFETIME_PROFIT_SHARE,
+    // );
+    // const binaryBonusEarnings = referralEarnings.filter(
+    //   (earn) =>
+    //     earn.type === constants.Earning_Type.TREE_REFERRAL ||
+    //     earn.type === constants.Earning_Type.BINARY_MATCHING_BONUS,
+    // );
 
     // Calculate totals for each referral type
     const directBonusIncome = directBonusEarnings.reduce((sum, earn) => sum + earn.totalAmount, 0);
-    const lifetimeIncome = lifetimeEarnings.reduce(
-      (sum, earn) => sum + earn.totalAmount,
-      0,
-    );
-    const binaryBonusIncome = binaryBonusEarnings.reduce(
-      (sum, earn) => sum + earn.totalAmount,
-      0,
-    );
+    // const lifetimeIncome = lifetimeEarnings.reduce(
+    //   (sum, earn) => sum + earn.totalAmount,
+    //   0,
+    // );
+    // const binaryBonusIncome = binaryBonusEarnings.reduce(
+    //   (sum, earn) => sum + earn.totalAmount,
+    //   0,
+    // );
 
     // Total referral income
-    const totalReferralIncome = directBonusIncome + lifetimeIncome + binaryBonusIncome;
+    const totalReferralIncome = directBonusIncome; // + lifetimeIncome + binaryBonusIncome;
 
     // Total income
     const totalIncome = totalCoOwnerIncome + totalReferralIncome;
@@ -205,8 +217,8 @@ class ReferralService {
       totalReferralIncome,
       referralIncomeBreakdown: {
         directBonusIncome,
-        lifetimeIncome,
-        binaryBonusIncome,
+        // lifetimeIncome,
+        // binaryBonusIncome,
       },
       coOwnerDistributions: coOwnerDistributions.map((dist) => ({
         evId: dist.evId._id,
@@ -243,6 +255,8 @@ class ReferralService {
     }))
   }
   static async createBinaryIncome(userId, outletId, amount) {
+    // Binary matching bonus commented out as per request
+    /*
     const buyer = await User.findById(userId).select("parentId position");
     if (!buyer || !buyer.parentId || !buyer.position) return;
 
@@ -292,8 +306,11 @@ class ReferralService {
       await parent.save();
       currentUser = parent;
     }
+    */
   }
   static async createLifetimeIncome(userId, outletId, profit, period) {
+    // Lifetime bonus commented out as per request
+    /*
     const user = await User.findById(userId);
     if (!user || !user.referredBy) return;
 
@@ -310,6 +327,7 @@ class ReferralService {
       totalAmount: bonus,
       period: period || new Date().toISOString().slice(0, 7),
     });
+    */
   }
 
 }

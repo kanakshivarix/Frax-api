@@ -19,16 +19,16 @@ class AdminReferralService {
     const directBonus = earnings
       .filter((item) => item.type === constants.Earning_Type.DIRECT_BONUS)
       .reduce((sum, item) => sum + (item.totalAmount || 0), 0);
-    const lifetimeProfitShare = earnings
-      .filter(
-        (item) => item.type === constants.Earning_Type.LIFETIME_PROFIT_SHARE,
-      )
-      .reduce((sum, item) => sum + (item.totalAmount || 0), 0);
-    const binaryMatchingBonus = earnings
-      .filter(
-        (item) => item.type === constants.Earning_Type.BINARY_MATCHING_BONUS,
-      )
-      .reduce((sum, item) => sum + (item.totalAmount || 0), 0);
+    // const lifetimeProfitShare = earnings
+    //   .filter(
+    //     (item) => item.type === constants.Earning_Type.LIFETIME_PROFIT_SHARE,
+    //   )
+    //   .reduce((sum, item) => sum + (item.totalAmount || 0), 0);
+    // const binaryMatchingBonus = earnings
+    //   .filter(
+    //     (item) => item.type === constants.Earning_Type.BINARY_MATCHING_BONUS,
+    //   )
+    //   .reduce((sum, item) => sum + (item.totalAmount || 0), 0);
 
     return {
       period: period || "all",
@@ -36,8 +36,8 @@ class AdminReferralService {
       totalEarnings,
       breakdown: {
         directBonus,
-        lifetimeProfitShare,
-        binaryMatchingBonus,
+        // lifetimeProfitShare,
+        // binaryMatchingBonus,
       },
     };
   }
@@ -87,6 +87,7 @@ class AdminReferralService {
     return "Payout schedule updated";
   }
 
+  /*
   static async distributeProfit(outletId, profit, period) {
     const outlet = await CafeOutlet.findById(outletId);
     if (!outlet) throw new ApiError(404, "Outlet not found");
@@ -126,6 +127,7 @@ class AdminReferralService {
       profitDistributed: profit,
     };
   }
+  */
 }
 
 module.exports = AdminReferralService;

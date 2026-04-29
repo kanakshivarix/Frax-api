@@ -57,7 +57,7 @@ class EVShareService {
       sharePrice: ev.pricePerShare,
       evId,
     });
-    await ReferralService.createBinaryIncome(userId, evId, shares * ev.pricePerShare);
+    // await ReferralService.createBinaryIncome(userId, evId, shares * ev.pricePerShare);
 
     logger.info(`Shares purchased for userId: ${userId}, evId: ${evId}`);
     return "Shares purchased";
