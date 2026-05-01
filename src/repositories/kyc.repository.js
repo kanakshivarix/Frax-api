@@ -192,12 +192,14 @@ class KycRepository {
       images.push(...kyc.selfie.image); 
     }
 
-    return images.find((img) => img._id.toString() === imageId) || null;
+    return images.find((img) => img?._id?.toString() === imageId) || null;
   }
 
 
   async list({ page, limit, status, search }) {
-    const skip = (page - 1) * limit;
+    const safePage=Math.max(1,Number(page)||1);
+    const safeLimit=Math.min(100,Math.max(1,Number(limit)||10));
+    const skip = (safePage - 1) * safeLimit;
 
     const match = {};
     if (status) match.status = status;
@@ -221,7 +223,8 @@ class KycRepository {
           $or: [
             { "user.phone": { $regex: search, $options: "i" } },
             { "user.email": { $regex: search, $options: "i" } },
-            { "user.fullname": { $regex: search, $options: "i" } },
+            { "user.firstName": { $regex: search, $options: "i" } },
+            {"user.lastName":{$regex:search,$options:"i"}},
           ],
         },
       });
@@ -230,7 +233,7 @@ class KycRepository {
     pipeline.push(
       { $sort: { updatedAt: -1 } },
       { $skip: skip },
-      { $limit: limit },
+      { $limit: safeLimit },
       {
         $project: {
           id: "$_id",

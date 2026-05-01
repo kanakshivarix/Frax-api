@@ -37,8 +37,8 @@ class InvestmentRepository {
     return Investment.findById(id).session(session);
   }
 
-  static findAdminList(filter, skip, limit) {
-    return Investment.aggregate([
+  static findAdminList(filter, skip, limit, search) {
+    const pipeline = [
       { $match: filter },
 
       {
@@ -60,7 +60,24 @@ class InvestmentRepository {
         },
       },
       { $unwind: "$outlet" },
+    ];
 
+    if (search) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { "user.firstName": { $regex: search, $options: "i" } },
+            { "user.lastName": { $regex: search, $options: "i" } },
+            { "user.phone": { $regex: search, $options: "i" } },
+            { "user.email": { $regex: search, $options: "i" } },
+            { "outlet.outletName": { $regex: search, $options: "i" } },
+            { "outlet.outletCode": { $regex: search, $options: "i" } },
+          ],
+        },
+      });
+    }
+
+    pipeline.push(
       { $sort: { createdAt: -1 } },
       { $skip: skip },
       { $limit: limit },
@@ -92,11 +109,50 @@ class InvestmentRepository {
           },
         },
       },
-    ]);
+    );
+    return Investment.aggregate(pipeline);
   }
 
-  static count(filter) {
-    return Investment.countDocuments(filter);
+  static async count(filter, search) {
+    if (!search) {
+      return Investment.countDocuments(filter);
+    }
+    const pipeline = [
+      { $match: filter },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: "$user" },
+      {
+        $lookup: {
+          from: "cafeoutlets",
+          localField: "outletId",
+          foreignField: "_id",
+          as: "outlet",
+        },
+      },
+      { $unwind: "$outlet" },
+      {
+        $match: {
+          $or: [
+            { "user.firstName": { $regex: search, $options: "i" } },
+            { "user.lastName": { $regex: search, $options: "i" } },
+            { "user.phone": { $regex: search, $options: "i" } },
+            { "user.email": { $regex: search, $options: "i" } },
+            { "outlet.outletName": { $regex: search, $options: "i" } },
+            { "outlet.outletCode": { $regex: search, $options: "i" } },
+          ],
+        },
+      },
+      { $count: "total" }
+    ];
+    const res = await Investment.aggregate(pipeline);
+    return res.length > 0 ? res[0].total : 0;
   }
 
   static findAdminById(investmentId) {

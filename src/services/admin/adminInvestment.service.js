@@ -174,16 +174,16 @@ class AdminInvestmentService {
       session.endSession();
     }
   }
-  static async listInvestments({ status, outletId, page, limit }) {
+  static async listInvestments({ status, outletId, page, limit, search }) {
     const filter = {};
     if (status) filter.status = status;
     if (outletId) filter.outletId = outletId;
-    const safePage = Number.isInteger(page) && page > 0 ? page : 1;
-    const safeLimit = Number.isInteger(limit) && limit > 0 ? limit : 100;
+    const safePage = Number.isInteger(Number(page)) && Number(page) > 0 ? Number(page) : 1;
+    const safeLimit = Number.isInteger(Number(limit)) && Number(limit) > 0 ? Number(limit) : 10;
     const skip = (safePage - 1) * safeLimit;
     const [items, total] = await Promise.all([
-      InvestmentRepo.findAdminList(filter, skip, safeLimit),
-      InvestmentRepo.count(filter),
+      InvestmentRepo.findAdminList(filter, skip, safeLimit, search),
+      InvestmentRepo.count(filter, search),
     ]);
     return {
       items,

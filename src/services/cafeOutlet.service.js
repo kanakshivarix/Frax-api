@@ -94,7 +94,7 @@ class CafeOutletService {
 
   static async listAdminCafes({ page, limit, search, city, areaType, status }) {
     page = Number(page) || 1;
-    limit = Number(limit) || 100;
+    limit = Number(limit) || 10;
 
     const filter = {};
 

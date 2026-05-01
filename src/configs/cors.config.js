@@ -3,6 +3,10 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://cafewafe.com",
   "https://admin.cafewafe.com",
+  "https://subcheliform-tentier-lanie.ngrok-free.dev",
+  "https://commercially-untrumping-kathrin.ngrok-free.dev"
+
+
 ];
 
 exports.corsOptions = {

@@ -27,9 +27,17 @@ class InvestmentService {
       // }
 
       const kyc = await KycRepo.findByUserId(userId);
-      // if (!kyc || kyc.status !== KYC_STATUS.VERIFIED) {
-      //   throw new ApiError(400, "KYC not verified");
-      // }
+
+      if (!kyc) {
+        throw new ApiError(400, "Please complete your KYC before investing");
+      }
+
+      if (kyc.status !== KYC_STATUS.VERIFIED) {
+        throw new ApiError(
+          403,
+          `KYC is ${kyc.status}. Investment allowed only after verification`,
+        );
+      }
 
       const outlet = await CafeOutletRepo.findLiveOutlet(
         body.outletId,
@@ -134,10 +142,9 @@ class InvestmentService {
     if (!investment) {
       throw new ApiError(404, "Investment not found");
     }
-    
 
-      return investment;
-    }
+    return investment;
   }
+}
 
 module.exports = InvestmentService;

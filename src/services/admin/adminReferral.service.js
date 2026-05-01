@@ -42,13 +42,22 @@ class AdminReferralService {
     };
   }
 
-  static async listEarnings({ period, type, page, limit }) {
+  static async listEarnings({ period, type, page, limit,search }) {
     const filter = {};
     if (period) filter.period = period;
     if (type) filter.type = type;
+    if(search)
+    {
+      filter.$or=[
+        {"userId.firstName":{$regex:search,$options:"i"}},
+        {"userId.lastName":{$regex:search,$options:"i"}},
+        {"referredUserId.firstName":{$regex:search,$options:"i"}},
+        {"referredUserId.lastName":{$regex:search,$options:"i"}},
+      ]
+    }
 
     const safePage = Number.isInteger(page) && page > 0 ? page : 1;
-    const safeLimit = Number.isInteger(limit) && limit > 0 ? limit : 100;
+    const safeLimit = Number.isInteger(limit) && limit > 0 ? limit : 10;
     const skip = (safePage - 1) * safeLimit;
 
     const [items, total] = await Promise.all([
