@@ -58,14 +58,30 @@ class InvestmentService {
         .toString(36)
         .slice(2, 6)
         .toUpperCase()}`;
+        const shares = body.shares || 1;
+
+if (shares < property.minInvestmentShares) {
+  throw new ApiError(400, "Minimum share requirement not met");
+}
+
+if (shares > property.maxInvestmentSharesPerUser) {
+  throw new ApiError(400, "Exceeds max shares per user");
+}
+
+if (shares > property.remainingShares) {
+  throw new ApiError(400, "Not enough shares available");
+}
+
+const pricePerShare = property.pricePerShare;
+const totalAmount = shares * pricePerShare;
 
       await InvestmentRepo.create(
         {
           userId,
           propertyId: property._id,
-          shares: body.shares || 1, // Fallback to 1 if not fractional
-          pricePerShare: property.price || 0,
-          totalAmount: property.price || 0,
+          shares,
+          pricePerShare,
+          totalAmount,
           investmentRef,
           payment: {
             utr: body.utr,
@@ -75,19 +91,6 @@ class InvestmentService {
         },
         session,
       );
-
-      // 🔒 Soft-lock the property (mark as pending)
-      const updateResult = await PropertyRepo.markAsPending(
-        property._id,
-        session,
-      );
-
-      if (updateResult.modifiedCount === 0) {
-        throw new ApiError(
-          409,
-          "Property is no longer available — someone else reserved it just now",
-        );
-      }
 
       await session.commitTransaction();
     } catch (err) {

@@ -59,6 +59,27 @@ class AdminPropertyAssetController {
     await PropertyAssetService.deleteDocument({ propertyId, documentId, adminId });
     return res.sendRes(200, null, "Document deleted successfully");
   });
+
+  static updateImage = asyncHandler(async (req, res) => {
+    const { propertyId, imageId } = req.params;
+    const file = req.files && req.files.length > 0 ? req.files[0] : req.file;
+    const adminId = req.user.userId;
+
+    if (!file) return res.sendRes(400, null, "Image file is required for update");
+
+    const data = await PropertyAssetService.updateImage({ propertyId, imageId, file, adminId });
+    return res.sendRes(200, data, "Image updated successfully");
+  });
+
+  static updateDocument = asyncHandler(async (req, res) => {
+    const { propertyId, documentId } = req.params;
+    const file = req.files && req.files.length > 0 ? req.files[0] : req.file;
+    const { name } = req.body;
+    const adminId = req.user.userId;
+
+    const data = await PropertyAssetService.updateDocument({ propertyId, documentId, file, name, adminId });
+    return res.sendRes(200, data, "Document updated successfully");
+  });
 }
 
 module.exports = AdminPropertyAssetController;

@@ -27,5 +27,20 @@ router.post(
 
 router.delete("/:propertyId/images/:imageId", authMiddleware, allowed(User_Type.SUPER_ADMIN), AdminPropertyAssetController.deleteImage);
 router.delete("/:propertyId/documents/:documentId", authMiddleware, allowed(User_Type.SUPER_ADMIN), AdminPropertyAssetController.deleteDocument);
+router.patch(
+  "/:propertyId/images/:imageId",
+  authMiddleware,
+  allowed(User_Type.SUPER_ADMIN),
+  upload.array("images", 10),
+  AdminPropertyAssetController.updateImage
+);
+
+router.patch(
+  "/:propertyId/documents/:documentId",
+  authMiddleware,
+  allowed(User_Type.SUPER_ADMIN),
+  upload.array("documents", 10),
+  AdminPropertyAssetController.updateDocument
+);
 
 module.exports = router;

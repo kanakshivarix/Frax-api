@@ -42,10 +42,14 @@
     </div>
   </div>
   <div class="details" style="margin-bottom: 30px;">
-    <div class="section-title">Cafe / Outlet Details</div>
-    <p><strong>Outlet Name:</strong> <%= outlet.outletName %></p>
-    <p><strong>Location:</strong> <%= outlet.city %>, <%= outlet.state %></p>
-    <p><strong>Address:</strong> <%= outlet.fullAddress %></p>
+    <div class="section-title">Property Details</div>
+    <p><strong>Property</strong> <%= property.title %></p>
+   <p><strong>Address:</strong> 
+  <%= property.location?.address || '' %>, 
+  <%= property.location?.city || '' %>, 
+  <%= property.location?.state || '' %> - 
+  <%= property.location?.pincode || '' %>
+</p>
   </div>
   <table>
     <thead>
@@ -58,7 +62,7 @@
     </thead>
     <tbody>
       <tr>
-        <td>Investment in <%= outlet.outletName %></td>
+        <td>Investment in <%= property.title %></td>
         <td><%= investment.shares %></td>
         <td>Rs. <%= investment.pricePerShare %></td>
         <td>Rs. <%= investment.totalAmount %></td>

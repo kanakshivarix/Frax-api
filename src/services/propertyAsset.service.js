@@ -77,11 +77,13 @@ class PropertyAssetService {
         const newDoc = {
           name: docName,
           key: doc.key,
-          url: signedUrl
         };
 
         await PropertyRepository.pushDocument(propertyId, newDoc);
-        results.push(newDoc);
+        results.push({
+          ...newDoc,
+          url:signedUrl
+        });
         uploadedDocs.push(newDoc);
       } catch (err) {
         log.error("Document upload failed", {
@@ -149,6 +151,67 @@ class PropertyAssetService {
 
     log.info("Property document deleted");
     return { success: true };
+  }
+
+  static async updateImage({ propertyId, imageId, file, adminId }) {
+    const log = logger.child({ action: "property:updateImage", propertyId, imageId, adminId });
+    const property = await PropertyRepository.findById(propertyId);
+    if (!property) throw new ApiError(404, "Property not found");
+
+    const image = property.images.id(imageId);
+    if (!image) throw new ApiError(404, "Image not found");
+
+    if (image.key) {
+      await deleteFromS3(image.key);
+    }
+
+    const newImage = await uploadImageToS3({
+      file,
+      folderName: `properties/${propertyId}/images`,
+    });
+
+    const signedUrl = await getSignedUrlFromS3(newImage.key);
+
+    image.key = newImage.key;
+    if (newImage.originalName) image.originalName = newImage.originalName;
+    if (newImage.mimeType) image.mimeType = newImage.mimeType;
+    if (newImage.size) image.size = newImage.size;
+
+    await property.save();
+
+    log.info("Property image updated");
+    return { ...newImage, url: signedUrl, _id: image._id };
+  }
+
+  static async updateDocument({ propertyId, documentId, file, name, adminId }) {
+    const log = logger.child({ action: "property:updateDocument", propertyId, documentId, adminId });
+    const property = await PropertyRepository.findById(propertyId);
+    if (!property) throw new ApiError(404, "Property not found");
+
+    const doc = property.documents.id(documentId);
+    if (!doc) throw new ApiError(404, "Document not found");
+
+    if (file) {
+      if (doc.key) {
+        await deleteFromS3(doc.key);
+      }
+      const newDoc = await uploadDocumentToS3({
+        file,
+        folderName: `properties/${propertyId}/documents`,
+      });
+      const signedUrl = await getSignedUrlFromS3(newDoc.key);
+      doc.key = newDoc.key;
+      if (!name) doc.name = newDoc.originalName;
+    }
+
+    if (name) {
+      doc.name = name;
+    }
+
+    await property.save();
+
+    log.info("Property document updated");
+    return { name: doc.name, key: doc.key, url: signedUrl, _id: doc._id };
   }
 }
 

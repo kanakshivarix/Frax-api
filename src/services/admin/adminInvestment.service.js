@@ -45,9 +45,31 @@ class AdminInvestmentService {
       });
 
       const user = await userRepository.findById(investment.userId);
-      const property = await PropertyRepo.findById(investment.propertyId, session);
+      const property = await PropertyRepo.findById(
+        investment.propertyId,
+        session,
+      );
+      // 1. soldShares update karo
+      await PropertyRepo.incrementSoldShares(
+        investment.propertyId,
+        investment.shares,
+        session,
+      );
+
+      // 2. updated property lo
+      const updatedProperty = await PropertyRepo.findById(
+        investment.propertyId,
+        session,
+      );
+
+      // 3. check karo sold hai ya nahi
+      if (updatedProperty.soldShares >= updatedProperty.totalShares) {
+        await PropertyRepo.markAsSold(investment.propertyId, session);
+      } else {
+        await PropertyRepo.markAsAvailable(investment.propertyId, session);
+      }
       const invoiceNumber = `INV-${Date.now()}`;
-      
+
       // We will skip PDF generation if ejs template doesn't exist, but keep logic
       let uploadedInvoice = null;
       try {
@@ -63,7 +85,7 @@ class AdminInvestmentService {
         const pdfBuffer = await generateInvoicePDFBuffer(invoiceHtml);
         const fileName = `INV-${Date.now()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}.pdf`;
         uploadedInvoice = await uploadPDFToS3(pdfBuffer, fileName);
-        
+
         await InvestmentRepo.updateInvoice(
           investment._id,
           {
@@ -71,14 +93,14 @@ class AdminInvestmentService {
             file: {
               key: `invoices/${fileName}`,
               originalName: fileName,
-              mimeType: "application/pdf"
+              mimeType: "application/pdf",
             },
             generatedAt: new Date(),
           },
           session,
         );
       } catch (e) {
-         log.warn("Invoice generation failed, skipping.", e);
+        log.warn("Invoice generation failed, skipping.", e);
       }
 
       try {
@@ -95,11 +117,8 @@ class AdminInvestmentService {
           },
         });
       } catch (e) {
-         log.warn("Mail sending failed, skipping.", e);
+        log.warn("Mail sending failed, skipping.", e);
       }
-
-      // Mark property as sold
-      await PropertyRepo.markAsSold(property._id, session);
 
       await session.commitTransaction();
       log.info("Investment approved");
@@ -122,10 +141,7 @@ class AdminInvestmentService {
     });
     if (!reason || reason.trim().length < 1) {
       log.warn("Invalid rejection reason");
-      throw new ApiError(
-        400,
-        "Rejection reason must be at least 1 characters",
-      );
+      throw new ApiError(400, "Rejection reason must be at least 1 characters");
     }
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -136,7 +152,7 @@ class AdminInvestmentService {
         throw new ApiError(400, "Investment not found or not in pending state");
       }
       await InvestmentRepo.reject(investmentId, reason, adminId, session);
-      
+
       const result = await PropertyRepo.markAsAvailable(
         investment.propertyId,
         session,
@@ -148,8 +164,11 @@ class AdminInvestmentService {
       }
 
       const user = await userRepository.findById(investment.userId);
-      const property = await PropertyRepo.findById(investment.propertyId, session);
-      
+      const property = await PropertyRepo.findById(
+        investment.propertyId,
+        session,
+      );
+
       try {
         await mailProvider.send({
           to: user.email,
@@ -160,10 +179,10 @@ class AdminInvestmentService {
             property,
             investment,
             reason,
-          }
+          },
         });
       } catch (e) {
-         log.warn("Mail sending failed, skipping.", e);
+        log.warn("Mail sending failed, skipping.", e);
       }
 
       await session.commitTransaction();
@@ -182,8 +201,10 @@ class AdminInvestmentService {
     const filter = {};
     if (status) filter.status = status;
     if (propertyId) filter.propertyId = propertyId;
-    const safePage = Number.isInteger(Number(page)) && Number(page) > 0 ? Number(page) : 1;
-    const safeLimit = Number.isInteger(Number(limit)) && Number(limit) > 0 ? Number(limit) : 10;
+    const safePage =
+      Number.isInteger(Number(page)) && Number(page) > 0 ? Number(page) : 1;
+    const safeLimit =
+      Number.isInteger(Number(limit)) && Number(limit) > 0 ? Number(limit) : 10;
     const skip = (safePage - 1) * safeLimit;
     const [items, total] = await Promise.all([
       InvestmentRepo.findAdminList(filter, skip, safeLimit, search),

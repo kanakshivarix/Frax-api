@@ -6,7 +6,7 @@ const { User } = require("../models/user.model");
 const moment = require("moment-timezone");
 const { default: Decimal } = require("decimal.js");
 const { IncomeDistribution } = require("../models/incomeDistribution.model");
-const InvestmentRepo =require("../repositories/investment.repository")
+const InvestmentRepo = require("../repositories/investment.repository");
 
 class ReferralService {
   static async getReferralLink(userId) {
@@ -22,7 +22,12 @@ class ReferralService {
   }
 
   //for every time user buy share
-  static async createDirectReferralBonus({ userId, shares, sharePrice, outletId }) {
+  static async createDirectReferralBonus({
+    userId,
+    shares,
+    sharePrice,
+    propertyId,
+  }) {
     logger.info(`Creating direct referral bonus for userId: ${userId}`);
     const user = await User.findById(userId);
     if (!user || !user.referredBy) {
@@ -35,12 +40,11 @@ class ReferralService {
       logger.error(`Referrer not found for userId: ${user.referredBy}`);
       return;
     }
-    const referrerInvestment=await InvestmentRepo.count({
-      userId:referrer._id,
-      status:"ADMIN_APPROVED",
-    })
-    if(referrerInvestment===0)
-    {
+    const referrerInvestment = await InvestmentRepo.count({
+      userId: referrer._id,
+      status: "ADMIN_APPROVED",
+    });
+    if (referrerInvestment === 0) {
       logger.info(`Referrer ${referrer._id} has no investment. Bonus skipped`);
       return;
     }
@@ -54,7 +58,7 @@ class ReferralService {
 
     const earning = new ReferralEarning({
       userId: referrer._id,
-      outletId,
+      propertyId,
       referredUserId: userId,
       type: constants.Earning_Type.DIRECT_BONUS,
       totalAmount: Number(bonusAmount),
@@ -63,12 +67,12 @@ class ReferralService {
     });
     await earning.save();
 
-    logger.info(`Direct referral bonus of ₹${bonusAmount} created for referrer: ${referrer._id}`);
+    logger.info(
+      `Direct referral bonus of ₹${bonusAmount} created for referrer: ${referrer._id}`,
+    );
 
     // Level 2 bonus removed as per user request
   }
-
-
 
   static async getUserIncome(userId, period) {
     logger.info(`Fetching income for user ${userId}, period ${period}`);
@@ -80,18 +84,24 @@ class ReferralService {
     }
 
     // Fetch co-owner distributions
-    const coOwnerDistributions = await IncomeDistribution.find({ userId, period })
+    const coOwnerDistributions = await IncomeDistribution.find({
+      userId,
+      period,
+    })
       .populate("evId", "model")
       .lean();
 
     // Fetch referral earnings and populate referred user details
     const referralEarnings = await ReferralEarning.find({ userId, period })
-      .populate("outletId", "outletName outletCode")
+      .populate("propertyId", "title location")
       .populate("referredUserId", "fullname")
       .lean();
 
     // Calculate total co-owner income
-    const totalCoOwnerIncome = coOwnerDistributions.reduce((sum, dist) => sum + dist.amount, 0);
+    const totalCoOwnerIncome = coOwnerDistributions.reduce(
+      (sum, dist) => sum + dist.amount,
+      0,
+    );
 
     // Split referral earnings by type
     const directBonusEarnings = referralEarnings.filter(
@@ -107,7 +117,10 @@ class ReferralService {
     // );
 
     // Calculate totals for each referral type
-    const directBonusIncome = directBonusEarnings.reduce((sum, earn) => sum + earn.totalAmount, 0);
+    const directBonusIncome = directBonusEarnings.reduce(
+      (sum, earn) => sum + earn.totalAmount,
+      0,
+    );
     // const lifetimeIncome = lifetimeEarnings.reduce(
     //   (sum, earn) => sum + earn.totalAmount,
     //   0,
@@ -141,16 +154,23 @@ class ReferralService {
         period: dist.period,
         createdAt: dist.createdAt,
       })),
-      referralEarnings: referralEarnings.map((earn) => ({
-        outletId: earn.outletId ? earn.outletId._id : null,
-        outletName: earn.outletId ? earn.outletId.outletName : null,
-        amount: earn.totalAmount,
-        type: earn.type,
-        referredUserId: earn.referredUserId ? earn.referredUserId._id : null,
-        referredUserName: earn.referredUserId ? earn.referredUserId.fullname : null,
-        period: earn.period,
-        createdAt: earn.createdAt,
-      })).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+      referralEarnings: referralEarnings
+        .map((earn) => ({
+          propertyId: earn.propertyId ? earn.propertyId._id : null,
+          propertyTitle: earn.propertyId ? earn.propertyId.title : null,
+          propertyLocation: earn.propertyId
+            ? `${earn.propertyId.location?.city}, ${earn.propertyId.location?.state}`
+            : null,
+          amount: earn.totalAmount,
+          type: earn.type,
+          referredUserId: earn.referredUserId ? earn.referredUserId._id : null,
+          referredUserName: earn.referredUserId
+            ? earn.referredUserId.fullname
+            : null,
+          period: earn.period,
+          createdAt: earn.createdAt,
+        }))
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
     };
   }
 
@@ -178,7 +198,10 @@ class ReferralService {
       .lean();
 
     // Calculate total co-owner income
-    const totalCoOwnerIncome = coOwnerDistributions.reduce((sum, dist) => sum + dist.amount, 0);
+    const totalCoOwnerIncome = coOwnerDistributions.reduce(
+      (sum, dist) => sum + dist.amount,
+      0,
+    );
 
     // Split referral earnings by type
     const directBonusEarnings = referralEarnings.filter(
@@ -194,7 +217,10 @@ class ReferralService {
     // );
 
     // Calculate totals for each referral type
-    const directBonusIncome = directBonusEarnings.reduce((sum, earn) => sum + earn.totalAmount, 0);
+    const directBonusIncome = directBonusEarnings.reduce(
+      (sum, earn) => sum + earn.totalAmount,
+      0,
+    );
     // const lifetimeIncome = lifetimeEarnings.reduce(
     //   (sum, earn) => sum + earn.totalAmount,
     //   0,
@@ -227,32 +253,36 @@ class ReferralService {
         period: dist.period,
         createdAt: dist.createdAt,
       })),
-      referralEarnings: referralEarnings.map((earn) => ({
-        outletId: earn.outletId ? earn.outletId._id : null,
-        outletName: earn.outletId ? earn.outletId.outletName : null,
-        amount: earn.totalAmount,
-        type: earn.type,
-        referredUserId: earn.referredUserId ? earn.referredUserId._id : null,
-        referredUserName: earn.referredUserId ? earn.referredUserId.fullname : null,
-        period: earn.period,
-        createdAt: earn.createdAt,
-      })).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+      referralEarnings: referralEarnings
+        .map((earn) => ({
+          outletId: earn.outletId ? earn.outletId._id : null,
+          outletName: earn.outletId ? earn.outletId.outletName : null,
+          amount: earn.totalAmount,
+          type: earn.type,
+          referredUserId: earn.referredUserId ? earn.referredUserId._id : null,
+          referredUserName: earn.referredUserId
+            ? earn.referredUserId.fullname
+            : null,
+          period: earn.period,
+          createdAt: earn.createdAt,
+        }))
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
     };
   }
 
-  static async getReferralHistory(userId)
-  {
+  static async getReferralHistory(userId) {
     logger.info(`Fetching referral history for userId :${userId}`);
-    const referredUsers=await User.find({referredBy:userId})
-    .select("firstName lastName email phone createdAt")
-    .lean();
-    return referredUsers.map((user)=>({
-      userId:user._id,
-      name:`${user.firstName || ""} ${user.lastName || ""}`.trim() || user.phone,
-      email:user.email,
-      phone:user.phone,
-      joinedAt:user.createdAt,
-    }))
+    const referredUsers = await User.find({ referredBy: userId })
+      .select("firstName lastName email phone createdAt")
+      .lean();
+    return referredUsers.map((user) => ({
+      userId: user._id,
+      name:
+        `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.phone,
+      email: user.email,
+      phone: user.phone,
+      joinedAt: user.createdAt,
+    }));
   }
   static async createBinaryIncome(userId, outletId, amount) {
     // Binary matching bonus commented out as per request
@@ -329,7 +359,6 @@ class ReferralService {
     });
     */
   }
-
 }
 
 module.exports = { ReferralService };

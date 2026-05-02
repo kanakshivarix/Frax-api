@@ -6,33 +6,63 @@ class PropertyRepository {
   }
 
   static findPublicList(filters = {}) {
-    return Property.aggregate([
-      {
-        $match: {
-          status: "available",
-          ...filters,
+  const pipeline = [
+    {
+      $match: {
+        status: "available",
+        ...filters,
+      },
+    },
+    { $sort: { createdAt: -1 } },
+    {
+      $project: {
+        id: "$_id",
+        _id: 0,
+        title: 1,
+        description: 1,
+        price: 1,
+        area: 1,
+        landType: 1,
+        ownershipType: 1,
+        location: 1,
+        amenities: 1,
+        tags: 1,
+        ownerDetails: 1,
+        isVerified: 1,
+        approvalStatus: 1,
+        totalShares: 1,
+        soldShares: 1,
+        pricePerShare: 1,
+        minInvestmentShares: 1,
+        maxInvestmentSharesPerUser: 1,
+        status: 1,
+        images: { $slice: ["$images", 1] },
+        documents: 1,
+        createdAt: 1,
+        remainingShares: { $subtract: ["$totalShares", "$soldShares"] },
+        fundingPercentage: {
+          $cond: [
+            { $eq: ["$totalShares", 0] },
+            0,
+            {
+              $round: [
+                {
+                  $multiply: [
+                    { $divide: ["$soldShares", "$totalShares"] },
+                    100,
+                  ],
+                },
+                0,
+              ],
+            },
+          ],
         },
       },
-      { $sort: { createdAt: -1 } },
-      {
-        $project: {
-          id: "$_id",
-          _id: 0,
-          title: 1,
-          price: 1,
-          area: 1,
-          landType: 1,
-          ownershipType: 1,
-          location: 1,
-          amenities: 1,
-          isVerified: 1,
-          status: 1,
-          images: { $slice: ["$images", 1] }, // Return only first image as cover
-          createdAt: 1,
-        },
-      },
-    ]);
-  }
+    },
+  ];
+
+  return Property.aggregate(pipeline);
+}
 
   static existsById(id) {
     return Property.exists({ _id: id });
@@ -63,7 +93,7 @@ class PropertyRepository {
     return Property.findByIdAndUpdate(
       id,
       { $pull: { images: { _id: imageId } } },
-      { new: true }
+      { new: true },
     );
   }
 
@@ -71,37 +101,67 @@ class PropertyRepository {
     return Property.findByIdAndUpdate(
       id,
       { $pull: { documents: { _id: docId } } },
-      { new: true }
+      { new: true },
     );
   }
-
   static async findPublicPaginated(filter, skip, limit) {
-    const pipeline = [
-      { $match: filter },
-      { $sort: { createdAt: -1 } },
-      { $skip: skip },
-      { $limit: limit },
-      {
-        $project: {
-          id: "$_id",
-          _id: 0,
-          title: 1,
-          price: 1,
-          area: 1,
-          landType: 1,
-          ownershipType: 1,
-          location: 1,
-          amenities: 1,
-          description: 1,
-          images: { $slice: ["$images", 5] },
-          status: 1,
-          isVerified: 1,
-          createdAt: 1,
+  const pipeline = [
+    { $match: filter },
+    { $sort: { createdAt: -1 } },
+    { $skip: skip },
+    { $limit: limit },
+    {
+      $project: {
+        id: "$_id",
+        _id: 0,
+        title: 1,
+        description: 1,
+        price: 1,
+        pricePerUnit: 1,
+        area: 1,
+        landType: 1,
+        ownershipType: 1,
+        location: 1,
+        amenities: 1,
+        tags: 1,
+        ownerDetails: 1,
+        isVerified: 1,
+        approvalStatus: 1,
+        totalShares: 1,
+        soldShares: 1,
+        pricePerShare: 1,
+        minInvestmentShares: 1,
+        maxInvestmentSharesPerUser: 1,
+        status: 1,
+        listedBy: 1,
+        images: { $slice: ["$images", 5] },
+        documents: 1,
+        createdAt: 1,
+        remainingShares: { $subtract: ["$totalShares", "$soldShares"] },
+        fundingPercentage: {
+          $cond: [
+            { $eq: ["$totalShares", 0] },
+            0,
+            {
+              $round: [
+                {
+                  $multiply: [
+                    { $divide: ["$soldShares", "$totalShares"] },
+                    100,
+                  ],
+                },
+                0,
+              ],
+            },
+          ],
         },
       },
-    ];
-    return Property.aggregate(pipeline);
-  }
+    },
+  ];
+
+  const properties = await Property.aggregate(pipeline);
+  return properties; // ✅ FIXED
+}
 
   static async findAdminPaginated(filter, skip, limit) {
     return Property.aggregate([
@@ -110,21 +170,53 @@ class PropertyRepository {
       { $skip: skip },
       { $limit: limit },
       {
-        $project: {
-          id: "$_id",
-          _id: 0,
-          title: 1,
-          price: 1,
-          area: 1,
-          landType: 1,
-          ownershipType: 1,
-          location: 1,
-          status: 1,
-          isVerified: 1,
-          approvalStatus: 1,
-          createdAt: 1,
+         $project: {
+        id: "$_id",
+        _id: 0,
+        title: 1,
+        description: 1,
+        price: 1,
+        pricePerUnit: 1,
+        area: 1,
+        landType: 1,
+        ownershipType: 1,
+        location: 1,
+        amenities: 1,
+        tags: 1,
+        ownerDetails: 1,
+        isVerified: 1,
+        approvalStatus: 1,
+        totalShares: 1,
+        soldShares: 1,
+        pricePerShare: 1,
+        minInvestmentShares: 1,
+        maxInvestmentSharesPerUser: 1,
+        status: 1,
+        listedBy: 1,
+        images: { $slice: ["$images", 5] },
+        documents: 1,
+        createdAt: 1,
+        remainingShares: { $subtract: ["$totalShares", "$soldShares"] },
+        fundingPercentage: {
+          $cond: [
+            { $eq: ["$totalShares", 0] },
+            0,
+            {
+              $round: [
+                {
+                  $multiply: [
+                    { $divide: ["$soldShares", "$totalShares"] },
+                    100,
+                  ],
+                },
+                0,
+              ],
+            },
+          ],
         },
       },
+
+      }
     ]);
   }
 
@@ -141,7 +233,7 @@ class PropertyRepository {
     return Property.updateOne(
       { _id: propertyId, status: "available" },
       { $set: { status: "pending" } },
-      { session }
+      { session },
     );
   }
 
@@ -149,7 +241,7 @@ class PropertyRepository {
     return Property.updateOne(
       { _id: propertyId },
       { $set: { status: "sold" } },
-      { session }
+      { session },
     );
   }
 
@@ -157,7 +249,7 @@ class PropertyRepository {
     return Property.updateOne(
       { _id: propertyId, status: "pending" },
       { $set: { status: "available" } },
-      { session }
+      { session },
     );
   }
 
@@ -168,6 +260,13 @@ class PropertyRepository {
   static async deleteById(propertyId) {
     return Property.findByIdAndDelete(propertyId);
   }
+  static async incrementSoldShares(propertyId, shares, session) {
+  return Property.updateOne(
+    { _id: propertyId },
+    { $inc: { soldShares: shares } },
+    { session }
+  );
+}
 }
 
 module.exports = PropertyRepository;

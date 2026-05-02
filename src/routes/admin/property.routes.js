@@ -8,7 +8,7 @@ const { createPropertySchema, updatePropertySchema } = require("../../validator/
 const router = Router();
 
 router.post("/", authMiddleware, allowed(User_Type.SUPER_ADMIN), validate(createPropertySchema), AdminPropertyController.createProperty);
-router.put("/:propertyId", authMiddleware, allowed(User_Type.SUPER_ADMIN), validate(updatePropertySchema), AdminPropertyController.updateProperty);
+router.patch("/:propertyId", authMiddleware, allowed(User_Type.SUPER_ADMIN), validate(updatePropertySchema), AdminPropertyController.updateProperty);
 router.get("/list", authMiddleware, allowed(User_Type.SUPER_ADMIN), AdminPropertyController.getAdminProperties);
 router.get("/:propertyId", authMiddleware, allowed(User_Type.SUPER_ADMIN), AdminPropertyController.getPropertyById);
 router.delete("/:propertyId", authMiddleware, allowed(User_Type.SUPER_ADMIN), AdminPropertyController.deleteProperty);

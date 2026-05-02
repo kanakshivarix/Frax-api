@@ -20,9 +20,6 @@ const propertySchema = new Schema(
       type: Number,
       required: true,
     },
-    pricePerUnit: {
-      type: Number,
-    },
     area: {
       value: Number, // e.g. 1200
       unit: {
@@ -52,7 +49,13 @@ const propertySchema = new Schema(
     amenities: [
       {
         type: String,
-        enum: ["road_access", "water", "electricity", "drainage", "boundary_wall"],
+        enum: [
+          "road_access",
+          "water",
+          "electricity",
+          "drainage",
+          "boundary_wall",
+        ],
       },
     ],
     tags: [String],
@@ -73,13 +76,19 @@ const propertySchema = new Schema(
     },
     isVerified: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     approvalStatus: {
       type: String,
       enum: PROPERTY_APPROVAL_STATUSES,
-      default: "pending",
+      default: "approved",
     },
+    totalShares: { type: Number, min: 1 },
+    soldShares: { type: Number, default: 0, min: 0 },
+    pricePerShare: { type: Number },
+    minInvestmentShares: { type: Number, default: 1 },
+    maxInvestmentSharesPerUser: { type: Number, default: 100 },
+
     status: {
       type: String,
       enum: PROPERTY_STATUSES,
@@ -98,10 +107,23 @@ const propertySchema = new Schema(
     optimisticConcurrency: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
 propertySchema.index({ "location.city": 1, status: 1 });
+
+propertySchema.virtual("remainingShares").get(function () {
+  return Math.max(0, this.totalShares - this.soldShares);
+});
+
+propertySchema.virtual("fundingPercentage").get(function () {
+  if (!this.totalShares) return 0;
+  return Math.min(100, Math.round((this.soldShares / this.totalShares) * 100));
+});
+
+propertySchema.virtual("isFullyFunded").get(function () {
+  return this.soldShares >= this.totalShares;
+});
 
 propertySchema.plugin(baseTransform);
 
