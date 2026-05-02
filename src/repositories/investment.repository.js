@@ -53,13 +53,13 @@ class InvestmentRepository {
 
       {
         $lookup: {
-          from: "cafeoutlets",
-          localField: "outletId",
+          from: "properties",
+          localField: "propertyId",
           foreignField: "_id",
-          as: "outlet",
+          as: "propertyObj",
         },
       },
-      { $unwind: "$outlet" },
+      { $unwind: "$propertyObj" },
     ];
 
     if (search) {
@@ -70,8 +70,7 @@ class InvestmentRepository {
             { "user.lastName": { $regex: search, $options: "i" } },
             { "user.phone": { $regex: search, $options: "i" } },
             { "user.email": { $regex: search, $options: "i" } },
-            { "outlet.outletName": { $regex: search, $options: "i" } },
-            { "outlet.outletCode": { $regex: search, $options: "i" } },
+            { "propertyObj.title": { $regex: search, $options: "i" } },
           ],
         },
       });
@@ -101,11 +100,10 @@ class InvestmentRepository {
             phone: "$user.phone",
           },
 
-          outlet: {
-            id: "$outlet._id",
-            outletName: "$outlet.outletName",
-            outletCode: "$outlet.outletCode",
-            city: "$outlet.city",
+          propertyObj: {
+            id: "$propertyObj._id",
+            title: "$propertyObj.title",
+            city: "$propertyObj.location.city",
           },
         },
       },
@@ -130,13 +128,13 @@ class InvestmentRepository {
       { $unwind: "$user" },
       {
         $lookup: {
-          from: "cafeoutlets",
-          localField: "outletId",
+          from: "properties",
+          localField: "propertyId",
           foreignField: "_id",
-          as: "outlet",
+          as: "propertyObj",
         },
       },
-      { $unwind: "$outlet" },
+      { $unwind: "$propertyObj" },
       {
         $match: {
           $or: [
@@ -144,8 +142,7 @@ class InvestmentRepository {
             { "user.lastName": { $regex: search, $options: "i" } },
             { "user.phone": { $regex: search, $options: "i" } },
             { "user.email": { $regex: search, $options: "i" } },
-            { "outlet.outletName": { $regex: search, $options: "i" } },
-            { "outlet.outletCode": { $regex: search, $options: "i" } },
+            { "propertyObj.title": { $regex: search, $options: "i" } },
           ],
         },
       },
@@ -159,15 +156,14 @@ class InvestmentRepository {
     return Investment.findById(investmentId)
       .populate("userId", "firstName lastName email phone")
       .populate({
-        path: "outletId",
+        path: "propertyId",
         select: {
           _id: 0,
           id: "$_id",
-          outletName: 1,
-          outletCode: 1,
-          city: 1,
-          state: 1,
-          pricePerShare: 1,
+          title: 1,
+          "location.city": 1,
+          "location.state": 1,
+          price: 1,
         },
       });
   }
@@ -182,16 +178,16 @@ class InvestmentRepository {
         },
       },
 
-      // join outlet
+      // join property
       {
         $lookup: {
-          from: "cafeoutlets",
-          localField: "outletId",
+          from: "properties",
+          localField: "propertyId",
           foreignField: "_id",
-          as: "outlet",
+          as: "propertyObj",
         },
       },
-      { $unwind: "$outlet" },
+      { $unwind: "$propertyObj" },
 
       { $sort: { createdAt: -1 } },
       { $skip: skip },
@@ -208,11 +204,10 @@ class InvestmentRepository {
           status: 1,
           createdAt: 1,
 
-          outlet: {
-            id: "$outlet._id",
-            outletName: "$outlet.outletName",
-            outletCode: "$outlet.outletCode",
-            city: "$outlet.city",
+          propertyObj: {
+            id: "$propertyObj._id",
+            title: "$propertyObj.title",
+            city: "$propertyObj.location.city",
           },
         },
       },
@@ -231,18 +226,17 @@ class InvestmentRepository {
         totalAmount: 1,
         status: 1,
         createdAt: 1,
-        outletId: 1,
+        propertyId: 1,
       },
     )
       .populate({
-        path: "outletId",
+        path: "propertyId",
         select: {
           _id: 0,
           id: "$_id",
-          outletName: 1,
-          outletCode: 1,
-          city: 1,
-          state: 1,
+          title: 1,
+          "location.city": 1,
+          "location.state": 1,
         },
       })
       .lean();

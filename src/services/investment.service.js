@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const CafeOutletRepo = require("../repositories/cafeOutlet.repository");
+const PropertyRepo = require("../repositories/property.repository");
 const InvestmentRepo = require("../repositories/investment.repository");
 const KycRepo = require("../repositories/kyc.repository");
 const UserRepo = require("../repositories/user.repository");
@@ -22,33 +22,25 @@ class InvestmentService {
         throw new ApiError(403, "User account is disabled");
       }
 
-      // if (!user.isEmailVerified) {
-      //   throw new ApiError(400, "Email not verified");
+      // const kyc = await KycRepo.findByUserId(userId);
+
+      // if (!kyc) {
+      //   throw new ApiError(400, "Please complete your KYC before investing");
       // }
 
-      const kyc = await KycRepo.findByUserId(userId);
+      // if (kyc.status !== KYC_STATUS.VERIFIED) {
+      //   throw new ApiError(
+      //     403,
+      //     `KYC is ${kyc.status}. Investment allowed only after verification`,
+      //   );
+      // }
 
-      if (!kyc) {
-        throw new ApiError(400, "Please complete your KYC before investing");
-      }
-
-      if (kyc.status !== KYC_STATUS.VERIFIED) {
-        throw new ApiError(
-          403,
-          `KYC is ${kyc.status}. Investment allowed only after verification`,
-        );
-      }
-
-      const outlet = await CafeOutletRepo.findLiveOutlet(
-        body.outletId,
+      const property = await PropertyRepo.findLiveProperty(
+        body.propertyId,
         session,
       );
-      if (!outlet) {
-        throw new ApiError(404, "Outlet not investable");
-      }
-
-      if (outlet.remainingShares < body.shares) {
-        throw new ApiError(400, "Insufficient shares available");
+      if (!property) {
+        throw new ApiError(404, "Property not available for investment");
       }
 
       if (!paymentProof) {
@@ -70,10 +62,10 @@ class InvestmentService {
       await InvestmentRepo.create(
         {
           userId,
-          outletId: outlet._id,
-          shares: body.shares,
-          pricePerShare: outlet.pricePerShare,
-          totalAmount: outlet.pricePerShare * body.shares,
+          propertyId: property._id,
+          shares: body.shares || 1, // Fallback to 1 if not fractional
+          pricePerShare: property.price || 0,
+          totalAmount: property.price || 0,
           investmentRef,
           payment: {
             utr: body.utr,
@@ -84,17 +76,16 @@ class InvestmentService {
         session,
       );
 
-      // 🔒 Soft-lock shares (transactional)
-      const updateResult = await CafeOutletRepo.reserveShares(
-        outlet._id,
-        body.shares,
+      // 🔒 Soft-lock the property (mark as pending)
+      const updateResult = await PropertyRepo.markAsPending(
+        property._id,
         session,
       );
 
       if (updateResult.modifiedCount === 0) {
         throw new ApiError(
           409,
-          "Shares no longer available — someone else reserved them just now",
+          "Property is no longer available — someone else reserved it just now",
         );
       }
 

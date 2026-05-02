@@ -5,7 +5,7 @@ const ReferralEarningSchema = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true }, // Who earns
     referredUserId: { type: Schema.Types.ObjectId, ref: "User", required: true }, // Referred user
-    outletId: { type: Schema.Types.ObjectId, ref: "CafeOutlet" }, // Cafe Outlet for referral
+    propertyId: { type: Schema.Types.ObjectId, ref: "Property" }, // Property for referral
     type: { type: String, enum: Object.values(constants.Earning_Type), required: true },
     totalAmount: { type: Number, required: true }, // e.g., ₹50 for direct
     paidAmount: { type: Number, default: 0 }, // Amount already paid

@@ -2,7 +2,7 @@ const { ReferralEarning } = require("../../models/referralEarning.model");
 const { constants } = require("../../utils/constants/history.constant");
 const ApiError = require("../../errors/ApiErrors");
 const Investment = require("../../models/investment.model");
-const CafeOutlet = require("../../models/cafeOutlet.model");
+const Property = require("../../models/property.model");
 const { ReferralService } = require("../referral.service");
 
 class AdminReferralService {
@@ -64,7 +64,7 @@ class AdminReferralService {
       ReferralEarning.find(filter)
         .populate("userId", "firstName lastName email phone")
         .populate("referredUserId", "firstName lastName email phone")
-        .populate("outletId", "outletName outletCode city")
+        .populate("propertyId", "title city")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(safeLimit)
@@ -97,15 +97,15 @@ class AdminReferralService {
   }
 
   /*
-  static async distributeProfit(outletId, profit, period) {
-    const outlet = await CafeOutlet.findById(outletId);
-    if (!outlet) throw new ApiError(404, "Outlet not found");
+  static async distributeProfit(propertyId, profit, period) {
+    const property = await Property.findById(propertyId);
+    if (!property) throw new ApiError(404, "Property not found");
 
     const investments = await Investment.find({
-      outletId,
+      propertyId,
       status: "ADMIN_APPROVED",
     });
-    if (!investments.length) return "No investments found for this outlet";
+    if (!investments.length) return "No investments found for this property";
 
     const totalShares = outlet.totalShares;
 
@@ -123,7 +123,7 @@ class AdminReferralService {
 
       await ReferralService.createLifetimeIncome(
         userId,
-        outletId,
+        propertyId,
         userProfit,
         period,
       );
@@ -132,7 +132,7 @@ class AdminReferralService {
 
     return {
       message: `Generated ${bonusesCreated} lifetime bonuses`,
-      outlet: outlet.outletName,
+      property: property.title,
       profitDistributed: profit,
     };
   }
