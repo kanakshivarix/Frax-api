@@ -12,5 +12,11 @@ const ImageSchema = new Schema(
   { _id: true, timestamps: true },
 );
 
+ImageSchema.virtual("url").get(function () {
+  if (!this.key) return null;
+  const { AWS_REGION, AWS_S3_BUCKET_NAME } = require("../../configs/env.config");
+  return `https://${AWS_S3_BUCKET_NAME}.s3.${AWS_REGION}.amazonaws.com/${this.key}`;
+});
+
 ImageSchema.plugin(baseTransform);
 module.exports = ImageSchema;

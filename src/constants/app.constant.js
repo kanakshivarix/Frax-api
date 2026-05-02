@@ -11,7 +11,7 @@ module.exports = Object.freeze({
     MAX_FILES: 5,
   },
   COMPANY: {
-    NAME: "CAFE MANAGEMENT",
+    NAME: "PROPERTY MANAGEMENT",
   },
   KYC_STATUS: {
     NOT_SUBMITTED: "Not Submitted",

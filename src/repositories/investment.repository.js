@@ -53,13 +53,13 @@ class InvestmentRepository {
 
       {
         $lookup: {
-          from: "cafeoutlets",
-          localField: "outletId",
+          from: "propertys",
+          localField: "propertyId",
           foreignField: "_id",
-          as: "outlet",
+          as: "property",
         },
       },
-      { $unwind: "$outlet" },
+      { $unwind: "$property" },
     ];
 
     if (search) {
@@ -70,8 +70,8 @@ class InvestmentRepository {
             { "user.lastName": { $regex: search, $options: "i" } },
             { "user.phone": { $regex: search, $options: "i" } },
             { "user.email": { $regex: search, $options: "i" } },
-            { "outlet.outletName": { $regex: search, $options: "i" } },
-            { "outlet.outletCode": { $regex: search, $options: "i" } },
+            // { "outlet.outletName": { $regex: search, $options: "i" } },
+            // { "outlet.outletCode": { $regex: search, $options: "i" } },
           ],
         },
       });
@@ -130,7 +130,7 @@ class InvestmentRepository {
       { $unwind: "$user" },
       {
         $lookup: {
-          from: "cafeoutlets",
+          from: "propertys",
           localField: "outletId",
           foreignField: "_id",
           as: "outlet",
@@ -185,7 +185,7 @@ class InvestmentRepository {
       // join outlet
       {
         $lookup: {
-          from: "cafeoutlets",
+          from: "propertys",
           localField: "outletId",
           foreignField: "_id",
           as: "outlet",

@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const InvestmentRepo = require("../../repositories/investment.repository");
-const CafeOutletRepo = require("../../repositories/cafeOutlet.repository");
+const PropertyRepo = require("../../repositories/property.repository");
 const ApiError = require("../../errors/ApiErrors");
 const { logger } = require("../../utils/helpers/logger.util");
 const s3Util = require("../../utils/helpers/aws.util");
@@ -50,7 +50,7 @@ class AdminInvestmentService {
       // );
 
       const user = await userRepository.findById(investment.userId);
-      const outlet = await CafeOutletRepo.findById(investment.outletId, session);
+      const outlet = await PropertyRepo.findById(investment.outletId, session);
       const invoiceNumber = `INV-${Date.now()}`;
       const invoiceHtml = await ejs.renderFile(
         path.join(process.cwd(), "src/views/emails/investment_invoice.ejs"),
@@ -103,7 +103,7 @@ class AdminInvestmentService {
         log.info("Outlet became fully funded", {
           outletId: outlet._id,
         });
-        await CafeOutletRepo.setStatusToFullyFunded(outlet._id, session);
+        await PropertyRepo.setStatusToFullyFunded(outlet._id, session);
       }
       await session.commitTransaction();
       log.info("Investment approved");
@@ -139,7 +139,7 @@ class AdminInvestmentService {
         throw new ApiError(400, "Investment not found or not in pending state");
       }
       await InvestmentRepo.reject(investmentId, reason, adminId, session);
-      const result = await CafeOutletRepo.releaseShares(
+      const result = await PropertyRepo.releaseShares(
         investment.outletId,
         investment.shares,
         session,
@@ -151,7 +151,7 @@ class AdminInvestmentService {
         });
       }
       const user=await userRepository.findById(investment.userId);
-      const outlet=await CafeOutletRepo.findById(investment.outletId,session);
+      const outlet=await PropertyRepo.findById(investment.outletId,session);
       await mailProvider.send({
         to:user.email,
         subject:"Update on Your Investment Request",

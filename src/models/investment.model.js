@@ -2,7 +2,7 @@ const { Schema, model } = require("mongoose");
 const ImageSchema = require("./schema/image.schema");
 const {
   User,
-  CafeOutlet,
+  Property,
   Investment,
 } = require("../constants/model.constants");
 const { Payment_Method } = require("../constants/app.constant");
@@ -22,9 +22,9 @@ const InvestmentSchema = new Schema(
       required: true,
       index: true,
     },
-    outletId: {
+    propertyId: {
       type: Schema.Types.ObjectId,
-      ref: CafeOutlet,
+      ref: Property,
       required: true,
       index: true,
     },

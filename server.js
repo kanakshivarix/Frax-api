@@ -31,25 +31,25 @@ server.use(cors(corsOptions));
 // 2. Security headers
 server.use(helmet());
 //for ngrok
-server.use(
-  helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" }, // Ye zaroori hai images ke liye
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        connectSrc: ["'self'", "https://*.ngrok-free.dev", "https://*.amazonaws.com"],
-        imgSrc: [
-          "'self'", 
-          "data:", 
-          "blob:", 
-          "https://*.amazonaws.com", // AWS S3 images ke liye
-          "https://*.ngrok-free.dev"
-        ],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
-      },
-    },
-  })
-);
+// server.use(
+//   helmet({
+//     crossOriginResourcePolicy: { policy: "cross-origin" }, // Ye zaroori hai images ke liye
+//     contentSecurityPolicy: {
+//       directives: {
+//         defaultSrc: ["'self'"],
+//         connectSrc: ["'self'", "https://*.ngrok-free.dev", "https://*.amazonaws.com"],
+//         imgSrc: [
+//           "'self'", 
+//           "data:", 
+//           "blob:", 
+//           "https://*.amazonaws.com", // AWS S3 images ke liye
+//           "https://*.ngrok-free.dev"
+//         ],
+//         scriptSrc: ["'self'", "'unsafe-inline'"],
+//       },
+//     },
+//   })
+// );
 
 // 3. GLOBAL rate limiter (applies to all requests)
 server.use(generalLimiter);
@@ -70,16 +70,16 @@ server.use(responseMiddleware);
 
 server.use("/api/v1", MainRoutes);
 //for live
-const frontendBuildPath=path.join(__dirname, "../cafe-admin/build");
-server.use(express.static(frontendBuildPath));
-server.use((req, res, next) => {
-  // Agar request /api se shuru nahi ho rahi, toh index.html bhej do
-  if (!req.url.startsWith('/api')) {
-    res.sendFile(path.join(frontendBuildPath, 'index.html'));
-  } else {
-    next();
-  }
-});
+// const frontendBuildPath=path.join(__dirname, "../cafe-admin/build");
+// server.use(express.static(frontendBuildPath));
+// server.use((req, res, next) => {
+//   // Agar request /api se shuru nahi ho rahi, toh index.html bhej do
+//   if (!req.url.startsWith('/api')) {
+//     res.sendFile(path.join(frontendBuildPath, 'index.html'));
+//   } else {
+//     next();
+//   }
+// });
 
 
 server.use(multerErrorMiddleware);

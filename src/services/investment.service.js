@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const CafeOutletRepo = require("../repositories/cafeOutlet.repository");
+const PropertyRepo = require("../repositories/property.repository");
 const InvestmentRepo = require("../repositories/investment.repository");
 const KycRepo = require("../repositories/kyc.repository");
 const UserRepo = require("../repositories/user.repository");
@@ -26,28 +26,28 @@ class InvestmentService {
       //   throw new ApiError(400, "Email not verified");
       // }
 
-      const kyc = await KycRepo.findByUserId(userId);
+      // const kyc = await KycRepo.findByUserId(userId);
 
-      if (!kyc) {
-        throw new ApiError(400, "Please complete your KYC before investing");
-      }
+      // if (!kyc) {
+      //   throw new ApiError(400, "Please complete your KYC before investing");
+      // }
 
-      if (kyc.status !== KYC_STATUS.VERIFIED) {
-        throw new ApiError(
-          403,
-          `KYC is ${kyc.status}. Investment allowed only after verification`,
-        );
-      }
+      // if (kyc.status !== KYC_STATUS.VERIFIED) {
+      //   throw new ApiError(
+      //     403,
+      //     `KYC is ${kyc.status}. Investment allowed only after verification`,
+      //   );
+      // }
 
-      const outlet = await CafeOutletRepo.findLiveOutlet(
-        body.outletId,
+      const property = await PropertyRepo.findLiveOutlet(
+        body.propertyId,
         session,
       );
-      if (!outlet) {
-        throw new ApiError(404, "Outlet not investable");
+      if (!property) {
+        throw new ApiError(404, "Property not investable");
       }
 
-      if (outlet.remainingShares < body.shares) {
+      if (property.remainingShares < body.shares) {
         throw new ApiError(400, "Insufficient shares available");
       }
 
@@ -66,14 +66,19 @@ class InvestmentService {
         .toString(36)
         .slice(2, 6)
         .toUpperCase()}`;
+  const pricePerShare=property.pricePerUnit;
+  if (!pricePerShare) {
+  throw new ApiError(400, "Property pricePerUnit is missing");
+}
+
 
       await InvestmentRepo.create(
         {
           userId,
-          outletId: outlet._id,
+          propertyId: property._id,
           shares: body.shares,
-          pricePerShare: outlet.pricePerShare,
-          totalAmount: outlet.pricePerShare * body.shares,
+          pricePerShare:  pricePerShare,
+          totalAmount: pricePerShare * body.shares,
           investmentRef,
           payment: {
             utr: body.utr,
@@ -84,9 +89,8 @@ class InvestmentService {
         session,
       );
 
-      // 🔒 Soft-lock shares (transactional)
-      const updateResult = await CafeOutletRepo.reserveShares(
-        outlet._id,
+      const updateResult = await PropertyRepo.reserveShares(
+        property._id,
         body.shares,
         session,
       );
