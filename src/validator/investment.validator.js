@@ -4,7 +4,7 @@ const { objectIdSchema } = require("./common.validator");
 module.exports = {
   createInvestment: z
     .object({
-      propertyId: objectIdSchema,
+      outletId: objectIdSchema,
       shares: z.coerce
         .number({
           invalid_type_error: "Shares must be a number",

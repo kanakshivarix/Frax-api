@@ -2,7 +2,7 @@ const { ReferralEarning } = require("../../models/referralEarning.model");
 const { constants } = require("../../utils/constants/history.constant");
 const ApiError = require("../../errors/ApiErrors");
 const Investment = require("../../models/investment.model");
-const Property = require("../../models/property.model");
+const CafeOutlet = require("../../models/cafeOutlet.model");
 const { ReferralService } = require("../referral.service");
 
 class AdminReferralService {
@@ -98,7 +98,7 @@ class AdminReferralService {
 
   /*
   static async distributeProfit(outletId, profit, period) {
-    const outlet = await Property.findById(outletId);
+    const outlet = await CafeOutlet.findById(outletId);
     if (!outlet) throw new ApiError(404, "Outlet not found");
 
     const investments = await Investment.find({

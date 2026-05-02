@@ -3,8 +3,8 @@ const router = express.Router();
 
 //admin routes
 const adminKycRoute = require("./admin/kyc.routes");
-const adminPropertyRoute = require("./admin/property.routes");
-const adminPropertyImageRoute = require("./admin/propertyImage.routes");
+const adminCafeRoute = require("./admin/cafeOutlet.routes");
+const adminCafeImageRoute = require("./admin/cafeOutletImage.routes");
 const adminInvestmentRoute = require("./admin/investment.route");
 const adminReferralRoute = require("./admin/adminReferral.route");
 const adminShareRoute = require("./admin/adminShare.route");
@@ -17,7 +17,7 @@ const adminUserRoute = require("./admin/adminUser.route");
 const authRoute = require("./user/auth.routes");
 const userRoute = require("./user/user.routes");
 const userKycRoute = require("./user/kyc.routes");
-const propertyRoute = require("./user/property.routes");
+const cafeRoute = require("./user/cafeOutlet.routes");
 const investmentRoute = require("./user/investment.route");
 
 // const evRoute = require("./user/ev.routes");
@@ -27,8 +27,8 @@ const referralRoute = require("./user/referral.routes");
 
 //admin
 router.use("/admin/kyc", adminKycRoute);
-router.use("/admin/property", adminPropertyRoute);
-router.use("/admin/propertyupload", adminPropertyImageRoute);
+router.use("/admin/cafe", adminCafeRoute);
+router.use("/admin/cafeupload", adminCafeImageRoute);
 router.use("/admin/investment", adminInvestmentRoute);
 router.use("/admin/referral", adminReferralRoute);
 // router.use("/admin/share", adminShareRoute);
@@ -41,7 +41,7 @@ router.use("/admin/user", adminUserRoute);
 router.use("/auth", authRoute);
 router.use("/user", userRoute);
 router.use("/kyc", userKycRoute);
-router.use("/property", propertyRoute);
+router.use("/cafe", cafeRoute);
 
 router.use("/investment", investmentRoute);
 

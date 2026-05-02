@@ -211,17 +211,10 @@ async function getObjectStreamFromS3(s3Key) {
   }
 }
 
-function getPublicUrlFromS3(key) {
-  if (!key) return null;
-  const { AWS_REGION } = require("../../configs/env.config");
-  return `https://${AWS_S3_BUCKET_NAME}.s3.${AWS_REGION}.amazonaws.com/${key}`;
-}
-
 module.exports = {
   uploadImageToS3,
   uploadDocumentToS3,
   deleteFromS3,
   getSignedUrlFromS3,
   getObjectStreamFromS3,
-  getPublicUrlFromS3,
 };

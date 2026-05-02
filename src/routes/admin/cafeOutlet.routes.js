@@ -1,62 +1,55 @@
 const router = require("express").Router();
 const { User_Type } = require("../../constants/app.constant");
-const AdminPropertyController = require("../../controllers/admin/Property.controller");
+const AdminCafeOutletController = require("../../controllers/admin/CafeOutlet.controller");
 const allowed = require("../../middlewares/allowed.middleware");
 const { authMiddleware } = require("../../middlewares/auth.middleware");
 const { validate, REQUEST_TARGET } = require("../../middlewares/validate.middleware");
-//const { validate, REQUEST_TARGET } = require("../../middlewares/validate.middleware");
-const { propertyImage } = require("../../validator/property.validator");
-const upload = require("../../middlewares/upload.middleware");
 
-
-const validation = require("../../validator/property.validator");
-
+const validation = require("../../validator/cafeoutlet.validator");
 
 router.get(
   "/",
   authMiddleware,
   allowed(User_Type.SUPER_ADMIN),
-  validate(validation.listAdminProperties, REQUEST_TARGET.QUERY),
-  AdminPropertyController.list,
+  validate(validation.listAdminCafes, REQUEST_TARGET.QUERY),
+  AdminCafeOutletController.list,
 );
 
 router.post(
   "/",
   authMiddleware,
   allowed(User_Type.SUPER_ADMIN),
-  validate(validation.property),
-  AdminPropertyController.create,
+  validate(validation.cafeOutlet),
+  AdminCafeOutletController.create,
 );
 router.patch(
-  "/:propertyId/status",
+  "/:cafeId/status",
   authMiddleware,
   allowed(User_Type.SUPER_ADMIN),
   validate(validation.updateStatus, REQUEST_TARGET.BODY), // validate body { status }
-  AdminPropertyController.changeStatus
+  AdminCafeOutletController.changeStatus
 );
 router.patch(
-  "/:propertyId",
+  "/:cafeId",
   authMiddleware,
   allowed(User_Type.SUPER_ADMIN),
-  upload.array("files", 20),
-  validate(validation.updateProperty, REQUEST_TARGET.BODY),
-   validate(propertyImage, REQUEST_TARGET.PARAMS),
-  AdminPropertyController.update
+  validate(validation.updateCafeOutlet, REQUEST_TARGET.BODY),
+  AdminCafeOutletController.update
 );
 router.get(
-  "/:propertyId",
+  "/:cafeId",
   authMiddleware,
   allowed(User_Type.SUPER_ADMIN),
   validate(validation.getById, REQUEST_TARGET.PARAMS),
-  AdminPropertyController.getById
+  AdminCafeOutletController.getById
 );
 
 router.delete(
-  "/:propertyId",
+  "/:cafeId",
   authMiddleware,
   allowed(User_Type.SUPER_ADMIN),
   validate(validation.getById, REQUEST_TARGET.PARAMS),
-  AdminPropertyController.delete
+  AdminCafeOutletController.delete
 );
 
 module.exports = router;
