@@ -1,21 +1,21 @@
 const ApiError = require("../errors/ApiErrors");
 const PropertyRepository = require("../repositories/property.repository");
 const { uploadImageToS3, uploadDocumentToS3, deleteFromS3, getSignedUrlFromS3 } = require("../utils/helpers/aws.util");
+const {attachImageUrls}=require("../utils/helpers/files.util")
 const { logger } = require("../utils/helpers/logger.util");
 
 class PropertyAssetService {
   static async addImages({ propertyId, files, adminId }) {
+    console.log("FILES IN SERVICE:", files);
+console.log("FIRST FILE:", files?.[0]);
     const log = logger.child({
       action: "property:addImages",
       propertyId,
       adminId,
-      count: files.length,
     });
 
-    const property = await PropertyRepository.existsById(propertyId);
-    if (!property) throw new ApiError(404, "Property not found");
-
-    const uploadedImages = [];
+    const exists = await PropertyRepository.existsById(propertyId);
+    if (!exists) throw new ApiError(404, "Property not found");
     const results = [];
 
     for (const file of files) {
@@ -24,28 +24,21 @@ class PropertyAssetService {
           file,
           folderName: `properties/${propertyId}/images`,
         });
-
-        const updatedImage = await PropertyRepository.pushImage(propertyId, image);
-        const signedUrl = await getSignedUrlFromS3(image.key);
-        
-        results.push({ ...image, url: signedUrl });
-        uploadedImages.push(image);
+        await PropertyRepository.pushImage(propertyId,image);
+        const imageWithUrl=await attachImageUrls(image);
+        results.push(imageWithUrl);
       } catch (err) {
         log.error("Image upload failed", {
-          originalName: file.originalname,
+          file: file.originalname,
           error: err.message,
         });
       }
     }
 
-    log.info("Images upload completed", {
-      successCount: uploadedImages.length,
-      total: files.length,
-    });
 
     return {
-      uploadedCount: uploadedImages.length,
-      failedCount: files.length - uploadedImages.length,
+      uploadedCount: results.length,
+      failedCount: files.length - results.length,
       images: results,
     };
   }
@@ -58,10 +51,9 @@ class PropertyAssetService {
       count: files.length,
     });
 
-    const property = await PropertyRepository.existsById(propertyId);
-    if (!property) throw new ApiError(404, "Property not found");
+    const exists = await PropertyRepository.existsById(propertyId);
+    if (!exists) throw new ApiError(404, "Property not found");
 
-    const uploadedDocs = [];
     const results = [];
 
     for (let i = 0; i < files.length; i++) {
@@ -71,36 +63,36 @@ class PropertyAssetService {
           file,
           folderName: `properties/${propertyId}/documents`,
         });
+        const name=names?.[i] || doc.originalName;
+        await PropertyRepository.pushDocument(propertyId,{
+          name,
+          key:doc.key,
+        })
+        const url=await getSignedUrlFromS3(doc.key);
 
-        const docName = (names && names[i]) ? names[i] : doc.originalName;
-        const signedUrl = await getSignedUrlFromS3(doc.key);
-        const newDoc = {
-          name: docName,
-          key: doc.key,
-        };
-
-        await PropertyRepository.pushDocument(propertyId, newDoc);
         results.push({
-          ...newDoc,
-          url:signedUrl
+          name,
+          key:doc.key,
+          url,
+
         });
-        uploadedDocs.push(newDoc);
+      
       } catch (err) {
         log.error("Document upload failed", {
-          originalName: file.originalname,
+          File: file.originalname,
           error: err.message,
         });
       }
     }
 
     log.info("Documents upload completed", {
-      successCount: uploadedDocs.length,
+      successCount: results.length,
       total: files.length,
     });
 
     return {
-      uploadedCount: uploadedDocs.length,
-      failedCount: files.length - uploadedDocs.length,
+      uploadedCount: results.length,
+      failedCount: files.length - results.length,
       documents: results,
     };
   }
@@ -119,12 +111,12 @@ class PropertyAssetService {
     const image = property.images.id(imageId);
     if (!image) throw new ApiError(404, "Image not found");
 
+    await PropertyRepository.removeImage(propertyId,imageId);
+
     if (image.key) {
       await deleteFromS3(image.key);
     }
-
-    await PropertyRepository.removeImage(propertyId, imageId);
-
+    
     log.info("Property image deleted");
     return { success: true };
   }
@@ -142,12 +134,12 @@ class PropertyAssetService {
 
     const doc = property.documents.id(documentId);
     if (!doc) throw new ApiError(404, "Document not found");
-
+     await PropertyRepository.removeDocument(propertyId, documentId);
     if (doc.key) {
       await deleteFromS3(doc.key);
     }
 
-    await PropertyRepository.removeDocument(propertyId, documentId);
+    
 
     log.info("Property document deleted");
     return { success: true };
@@ -170,17 +162,17 @@ class PropertyAssetService {
       folderName: `properties/${propertyId}/images`,
     });
 
-    const signedUrl = await getSignedUrlFromS3(newImage.key);
-
-    image.key = newImage.key;
-    if (newImage.originalName) image.originalName = newImage.originalName;
-    if (newImage.mimeType) image.mimeType = newImage.mimeType;
-    if (newImage.size) image.size = newImage.size;
-
+     image.key = newImage.key;
+    image.originalName = newImage.originalName;
+    image.mimeType = newImage.mimeType;
+    image.size = newImage.size;
     await property.save();
 
+    const imageWithUrl=await attachImageUrls(newImage);
+
+
     log.info("Property image updated");
-    return { ...newImage, url: signedUrl, _id: image._id };
+    return { ...newImage,_id: image._id };
   }
 
   static async updateDocument({ propertyId, documentId, file, name, adminId }) {
@@ -190,6 +182,7 @@ class PropertyAssetService {
 
     const doc = property.documents.id(documentId);
     if (!doc) throw new ApiError(404, "Document not found");
+    let url;
 
     if (file) {
       if (doc.key) {
@@ -199,9 +192,14 @@ class PropertyAssetService {
         file,
         folderName: `properties/${propertyId}/documents`,
       });
-      const signedUrl = await getSignedUrlFromS3(newDoc.key);
+  
       doc.key = newDoc.key;
+      url=await getSignedUrlFromS3(newDoc.key);
       if (!name) doc.name = newDoc.originalName;
+      else 
+      {
+        url=await getSignedUrlFromS3(doc.key);
+      }
     }
 
     if (name) {
@@ -211,7 +209,7 @@ class PropertyAssetService {
     await property.save();
 
     log.info("Property document updated");
-    return { name: doc.name, key: doc.key, url: signedUrl, _id: doc._id };
+    return { name: doc.name, key: doc.key, url, _id: doc._id };
   }
 }
 

@@ -12,6 +12,18 @@ class PropertyController {
     const data = await PropertyService.getPropertyById(propertyId);
     return res.sendRes(200, data, "Property retrieved successfully");
   });
+  static async getHighlighted(req, res, next) {
+  try {
+    const property = await PropertyService.getHighlightedProperty();
+
+    res.json({
+      success: true,
+      data: property,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
 }
 
 module.exports = PropertyController;

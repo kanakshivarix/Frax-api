@@ -8,7 +8,8 @@ const { AWS_S3_BUCKET_NAME } = require("../../configs/env.config");
 const { logger } = require("./logger.util");
 const { s3Client } = require("../../configs/aws.config");
 
-const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "application/pdf"];
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp",
+  "image/avif", "application/pdf"];
 
 /**
  * Sanitizes a filename for safe use as S3 key
@@ -66,13 +67,13 @@ async function uploadImageToS3({ file, folderName }) {
 
   // 1. Validate ORIGINAL buffer
   const detected = await fileTypeFromBuffer(file.buffer);
-  if (!detected || !["image/jpeg", "image/png"].includes(detected.mime)) {
-    throw new ApiError(400, "Invalid image file. Only JPEG and PNG allowed.");
+  if (!detected || !["image/jpeg", "image/png","image/webp","image/avif"].includes(detected.mime)) {
+    throw new ApiError(400, "Invalid image file. Only JPEG ,PNG,WEBP,AVIF allowed.");
   }
 
   // Preserve original format
   const finalMime = detected.mime;
-  const finalExt = detected.ext || (finalMime === "image/jpeg" ? "jpg" : "png");
+  const finalExt = detected.ext || (finalMime === "image/jpeg" ? "jpg": finalMime==="image/png"?"png":finalMime==="image/webp"?"webp":"avif");
 
   // Use original extension in filename (sanitized)
   const safeFileName = sanitizeFileName(

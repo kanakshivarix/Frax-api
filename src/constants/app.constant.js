@@ -25,9 +25,6 @@ module.exports = Object.freeze({
   },
   Earning_Type: {
     DIRECT_BONUS: "direct_bonus",
-    LIFETIME_PROFIT_SHARE: "lifetime_profit_share",
-    TREE_REFERRAL: "tree_referral",
-    BINARY_MATCHING_BONUS: "binary_matching_bonus",
   },
   Earning_Status: {
     PENDING: "pending",

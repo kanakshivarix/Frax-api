@@ -45,6 +45,10 @@ const UserSchema = new Schema(
     // parentId: { type: Schema.Types.ObjectId, ref: "User" },
     // position: { type: String, enum: ["left", "right"] },
   },
+  {
+  timestamps: true
+}
+ 
  
 );
 

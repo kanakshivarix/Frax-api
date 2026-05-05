@@ -15,8 +15,8 @@ const locationSchema = z
     pincode: z.string().optional(),
     coordinates: z
       .object({
-        lat: z.number().optional(),
-        lng: z.number().optional(),
+        lat: z.number(),
+        lng: z.number(),
       })
       .optional(),
   })
@@ -66,6 +66,7 @@ const createPropertySchema = z
     isVerified: z.boolean().optional(),
     approvalStatus: z.enum(["pending", "approved", "rejected"]).optional(),
     status: z.enum(["available", "sold", "pending"]).optional(),
+    isHighlighted: z.boolean().optional(),
   })
   .strict();
 
@@ -102,6 +103,7 @@ const updatePropertySchema = z
     minInvestmentShares: z.number().min(1).optional(),
     maxInvestmentSharesPerUser: z.number().min(1).optional(),
     status: z.enum(["available", "sold", "pending"]).optional(),
+    isHighlighted: z.boolean().optional(),
   })
   .strict();
 

@@ -4,6 +4,7 @@ const { asyncHandler } = require("../../utils/helpers/asyncHandler.util");
 class AdminPropertyController {
   static createProperty = asyncHandler(async (req, res) => {
     const adminId = req.user.userId;
+    console.log("USER:", req.user);
     const data = await PropertyService.createProperty(req.body, adminId);
     return res.sendRes(201, data, "Property created successfully");
   });

@@ -95,10 +95,14 @@ const propertySchema = new Schema(
       default: "available",
       index: true,
     },
+    isHighlighted: {
+  type: Boolean,
+  default: false,
+  index: true,
+},
     listedBy: {
       type: Schema.Types.ObjectId,
       ref: User,
-      required: true,
       index: true,
     },
   },

@@ -69,9 +69,10 @@ class AdminInvestmentService {
         await PropertyRepo.markAsAvailable(investment.propertyId, session);
       }
       const invoiceNumber = `INV-${Date.now()}`;
+      let pdfBuffer = null;
 
       // We will skip PDF generation if ejs template doesn't exist, but keep logic
-      let uploadedInvoice = null;
+    
       try {
         const invoiceHtml = await ejs.renderFile(
           path.join(process.cwd(), "src/views/emails/investment_invoice.ejs"),
@@ -82,9 +83,9 @@ class AdminInvestmentService {
             invoiceNumber,
           },
         );
-        const pdfBuffer = await generateInvoicePDFBuffer(invoiceHtml);
+        pdfBuffer = await generateInvoicePDFBuffer(invoiceHtml);
         const fileName = `INV-${Date.now()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}.pdf`;
-        uploadedInvoice = await uploadPDFToS3(pdfBuffer, fileName);
+        await uploadPDFToS3(pdfBuffer,fileName);
 
         await InvestmentRepo.updateInvoice(
           investment._id,
@@ -113,8 +114,16 @@ class AdminInvestmentService {
             user,
             property,
             invoiceNumber,
-            pdfUrl: uploadedInvoice,
           },
+          attachments: pdfBuffer
+            ? [
+                {
+                  filename: `Invoice-${invoiceNumber}.pdf`,
+                  content: pdfBuffer,
+                  contentType: "application/pdf",
+                },
+              ]
+            : [],
         });
       } catch (e) {
         log.warn("Mail sending failed, skipping.", e);

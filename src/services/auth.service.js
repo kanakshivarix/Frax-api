@@ -13,7 +13,7 @@ const kycRepo = require("../repositories/kyc.repository");
 const otpSessionRepo = require("../repositories/otpSession.repository");
 const { generateOtp, getOtpExpiry } = require("../utils/otp.util");
 const MailService = require("./mail.service");
-const {User} = require("../models/user.model");
+const { User } = require("../models/user.model");
 
 class AuthService {
   async loginWithEmail({ email, password }) {
@@ -56,48 +56,52 @@ class AuthService {
     };
   }
   async sendOtp({ phone, referralCode, consents }) {
-  const log = logger.child({ action: "sendOtp", phone });
+    const log = logger.child({ action: "sendOtp", phone });
 
-  const existingUser = await User.findOne({ phone });
+    const existingUser = await User.findOne({ phone });
 
- 
-  if (existingUser && consents) {
-    throw new ApiError(400, "investor already exists");
-  }
-
-  
-  if (!existingUser) {
-    const isValidConsents =
-      consents?.isAdult === true &&
-      consents?.acceptTerms === true &&
-      consents?.understandRisk === true &&
-      consents?.kycAgree === true &&
-      consents?.fundsLegal === true &&
-      consents?.notProxy === true;
-
-    if (!isValidConsents) {
-      throw new ApiError(400, "Please accept all terms and conditions");
+    if (existingUser && consents) {
+      throw new ApiError(400, "investor already exists");
     }
+
+    if (!existingUser) {
+      const isValidConsents =
+        consents?.isAdult === true &&
+        consents?.acceptTerms === true &&
+        consents?.understandRisk === true &&
+        consents?.kycAgree === true &&
+        consents?.fundsLegal === true &&
+        consents?.notProxy === true;
+
+      if (!isValidConsents) {
+        throw new ApiError(400, "Please accept all terms and conditions");
+      }
+    }
+
+    const otp = generateOtp();
+    const otpExpires = getOtpExpiry();
+
+    const existingSession = await otpSessionRepo.findByPhone(phone);
+
+    await otpSessionRepo.upsert({
+      phone,
+      otp,
+      otpExpires,
+      referralCode: existingSession?.referralCode || referralCode || null,
+      consents: {
+        isAdult: !!consents?.isAdult,
+        acceptTerms: !!consents?.acceptTerms,
+        understandRisk: !!consents?.understandRisk,
+        kycAgree: !!consents?.kycAgree,
+        fundsLegal: !!consents?.fundsLegal,
+        notProxy: !!consents?.notProxy,
+      },
+    });
+
+    log.debug("OTP generated and sent");
+
+    return existingUser ? "OTP sent for login" : "OTP sent for registration";
   }
-
-  const otp = generateOtp();
-  const otpExpires = getOtpExpiry();
-
-  const existingSession = await otpSessionRepo.findByPhone(phone);
-
-  await otpSessionRepo.upsert({
-    phone,
-    otp,
-    otpExpires,
-    referralCode: existingSession?.referralCode || referralCode || null,
-  });
-
-  log.debug("OTP generated and sent");
-
-  return existingUser
-    ? "OTP sent for login"
-    : "OTP sent for registration";
-}
   async verifyOtpAndLogin({ phone, otp }) {
     const log = logger.child({ action: "verifyOtpAndLogin", phone });
 
@@ -110,40 +114,39 @@ class AuthService {
 
     let user = await userRepo.findByPhone(phone);
     if (!user) {
-  let referrer = null;
+      let referrer = null;
 
-  if (session.referralCode) {
-    referrer = await userRepo.findByReferralCode(session.referralCode);
-  }
+      if (session.referralCode) {
+        referrer = await userRepo.findByReferralCode(session.referralCode);
+      }
 
+      user = await userRepo.create({
+        phone,
+        isPhoneVerified: true,
+        referredBy: referrer ? referrer._id : null,
+        consents: session?.consents,
+      });
 
-  user = await userRepo.create({
-    phone,
-    isPhoneVerified: true,
-    referredBy: referrer ? referrer._id : null,
-  });
+      // if (referrer) {
+      //   if (!referrer.leftChild) {
+      //     referrer.leftChild = user._id;
+      //     user.position = "left";
+      //   } else if (!referrer.rightChild) {
+      //     referrer.rightChild = user._id;
+      //     user.position = "right";
+      //   } else {
+      //     console.log("Both left & right filled");
+      //     // future: spillover logic
+      //   }
 
-// if (referrer) {
-//   if (!referrer.leftChild) {
-//     referrer.leftChild = user._id;
-//     user.position = "left";
-//   } else if (!referrer.rightChild) {
-//     referrer.rightChild = user._id;
-//     user.position = "right";
-//   } else {
-//     console.log("Both left & right filled");
-//     // future: spillover logic
-//   }
+      //   user.parentId = referrer._id;
 
-//   user.parentId = referrer._id;
+      //   await referrer.save();
+      //   await user.save();
+      // }
 
-//   await referrer.save();
-//   await user.save();
-// }
-
-  await kycRepo.getOrCreate(user._id);
-}
-    else {
+      await kycRepo.getOrCreate(user._id);
+    } else {
       await userRepo.updateById(user._id, { isPhoneVerified: true });
     }
 
@@ -254,10 +257,9 @@ class AuthService {
     if (!refreshToken) {
       throw new ApiError(400, "Refresh token required");
     }
-    
 
     const user = await userRepo.findByRefreshToken(refreshToken);
-    
+
     if (!user) {
       log.error("Invalid refresh token");
       throw new ApiError(401, "Invalid refresh token");
@@ -329,7 +331,6 @@ class AuthService {
       phone,
       referredBy,
     });
-
 
     await kycRepo.getOrCreate(user._id);
 

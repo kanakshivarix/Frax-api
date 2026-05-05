@@ -1,6 +1,10 @@
 const ApiError = require("../errors/ApiErrors");
 const PropertyRepository = require("../repositories/property.repository");
 const { logger } = require("../utils/helpers/logger.util");
+const {
+  attachImageUrls,
+  attachImageUrlsList,
+} = require("../utils/helpers/files.util");
 const { getSignedUrlFromS3 } = require("../utils/helpers/aws.util");
 
 class PropertyService {
@@ -56,25 +60,10 @@ class PropertyService {
       PropertyRepository.findPublicPaginated(filter, skip, limit),
       PropertyRepository.count(filter),
     ]);
-
-    const updatedItems = await Promise.all(
-      (items || []).map(async (item) => {
-        const imagesWithUrl = await Promise.all(
-          (item.images || []).map(async (img) => ({
-            ...img,
-            url: await getSignedUrlFromS3(img.key),
-          })),
-        );
-
-        return {
-          ...item,
-          images: imagesWithUrl,
-        };
-      }),
-    );
+     const itemsWithImages = await attachImageUrlsList(items);
 
     return {
-      items: updatedItems,
+      items:itemsWithImages,
       pagination: {
         page,
         limit,
@@ -106,24 +95,9 @@ class PropertyService {
       PropertyRepository.findAdminPaginated(filter, skip, limit),
       PropertyRepository.count(filter),
     ]);
-    const updatedItems = await Promise.all(
-      (items || []).map(async (item) => {
-        const imagesWithUrl = await Promise.all(
-          (item.images || []).map(async (img) => ({
-            ...img,
-            url: await getSignedUrlFromS3(img.key),
-          })),
-        );
-
-        return {
-          ...item,
-          images: imagesWithUrl,
-        };
-      }),
-    );
 
     return {
-      items: updatedItems,
+      items,
       pagination: {
         page,
         limit,
@@ -137,27 +111,18 @@ class PropertyService {
     const property = await PropertyRepository.findById(propertyId);
     if (!property) throw new ApiError(404, "Property not found");
 
-    // images ke liye signed URL
-    const imagesWithUrl = await Promise.all(
-      (property.images || []).map(async (img) => ({
-        ...img.toObject(),
-        url: await getSignedUrlFromS3(img.key),
-      })),
-    );
+    // images attach
+    const updatedProperty = await attachImageUrls(property);
 
-    // documents ke liye signed URL
-    const documentsWithUrl = await Promise.all(
+    // documents attach
+    updatedProperty.documents = await Promise.all(
       (property.documents || []).map(async (doc) => ({
         ...doc.toObject(),
         url: await getSignedUrlFromS3(doc.key),
       })),
     );
 
-    return {
-      ...property.toObject(),
-      images: imagesWithUrl,
-      documents: documentsWithUrl,
-    };
+    return updatedProperty;
   }
 
   static async deleteProperty(propertyId, adminId) {
@@ -173,6 +138,20 @@ class PropertyService {
     log.info("Property deleted");
     return { success: true };
   }
+  static async getHighlightedProperty() {
+  const properties = await PropertyRepository.getHighlightedList();
+
+  if (!properties.length) return null;
+
+ 
+  const randomIndex = Math.floor(Math.random() * properties.length);
+  const property = properties[randomIndex];
+
+  // images attach
+  const updated = await attachImageUrls(property);
+
+  return updated;
+}
 }
 
 module.exports = PropertyService;

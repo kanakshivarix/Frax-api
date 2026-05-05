@@ -7,6 +7,14 @@ const OtpSessionSchema = new Schema(
     otp: { type: String, required: true },
     otpExpires: { type: Date, required: true },
     referralCode: { type: String, default: null },
+     consents: {
+      isAdult: { type: Boolean, default: false },
+      acceptTerms: { type: Boolean, default: false },
+      understandRisk: { type: Boolean, default: false },
+      kycAgree: { type: Boolean, default: false },
+      fundsLegal: { type: Boolean, default: false },
+      notProxy: { type: Boolean, default: false },
+    },
   },
   {
     timestamps: true,

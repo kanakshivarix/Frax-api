@@ -160,7 +160,7 @@ class PropertyRepository {
   ];
 
   const properties = await Property.aggregate(pipeline);
-  return properties; // ✅ FIXED
+  return properties; 
 }
 
   static async findAdminPaginated(filter, skip, limit) {
@@ -267,6 +267,13 @@ class PropertyRepository {
     { session }
   );
 }
+static async getHighlightedList() {
+  return Property.find({
+    isHighlighted: true,
+    status: "available",
+  });
+}
+
 }
 
 module.exports = PropertyRepository;
